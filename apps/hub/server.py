@@ -206,6 +206,110 @@ def is_port_open(port: int, host: str = "127.0.0.1") -> bool:
 
 
 SPAWNED_PROCESSES = []
+SPAWNED_PROCESSES_BY_APP = {}
+OPEN_WINDOWS = {}
+
+
+def kill_port(port: int):
+    """Finaliza qualquer processo escutando na porta especificada."""
+    if not port:
+        return
+    if sys.platform == "win32":
+        try:
+            cmd = f'powershell.exe -NoProfile -Command "Get-NetTCPConnection -LocalPort {port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object {{ Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }}"'
+            subprocess.run(cmd, shell=True, creationflags=0x08000000)
+        except Exception:
+            pass
+
+
+def stop_app_process(app_id: str) -> dict:
+    """Encerra o processo do aplicativo e libera a porta."""
+    app = APPS.get(app_id)
+    if not app:
+        return {"error": "Aplicativo não encontrado"}
+
+    port = app.get("port")
+
+    # 1. Encerra processos filhos rastreados
+    if app_id in SPAWNED_PROCESSES_BY_APP:
+        for proc in SPAWNED_PROCESSES_BY_APP[app_id]:
+            try:
+                if proc.poll() is None:
+                    proc.terminate()
+            except Exception:
+                pass
+        del SPAWNED_PROCESSES_BY_APP[app_id]
+
+    # 2. Fecha janelas de rotas associadas a este app
+    for key in list(OPEN_WINDOWS.keys()):
+        if OPEN_WINDOWS[key].get("app_id") == app_id:
+            try:
+                proc = OPEN_WINDOWS[key].get("proc")
+                if proc and proc.poll() is None:
+                    proc.terminate()
+            except Exception:
+                pass
+            del OPEN_WINDOWS[key]
+
+    # 3. Mata processo residual na porta
+    if port:
+        kill_port(port)
+
+    # 4. Aguarda porta liberar
+    for _ in range(8):
+        time.sleep(0.25)
+        if not is_port_open(port):
+            break
+
+    return {"status": "stopped", "app": app_id, "active": is_port_open(port), "port": port}
+
+
+def stop_all_apps() -> dict:
+    """Encerra todos os jogos ativos de uma vez e limpa a memória."""
+    for app_id in list(APPS.keys()):
+        stop_app_process(app_id)
+    cleanup_spawned_processes()
+    return {"status": "all_stopped"}
+
+
+def window_action(key: str, action: str) -> dict:
+    """Executa ação em janela aberta (focar, minimizar ou fechar)."""
+    win = OPEN_WINDOWS.get(key)
+    if not win:
+        return {"error": "Janela não encontrada", "key": key}
+
+    url = win.get("url")
+    proc = win.get("proc")
+    title = win.get("title", "")
+
+    if action == "close":
+        if proc and proc.poll() is None:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+        del OPEN_WINDOWS[key]
+        return {"status": "closed", "key": key}
+
+    elif action == "minimize":
+        win["minimized"] = True
+        if sys.platform == "win32" and title:
+            try:
+                ps_min = f'powershell.exe -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; if ($ws.AppActivate(\'{title}\')) {{ [System.Windows.Forms.SendKeys]::SendWait(\'% {{SPACE}}n\') }}"'
+                subprocess.Popen(ps_min, shell=True, creationflags=0x08000000)
+            except Exception:
+                pass
+        return {"status": "minimized", "key": key}
+
+    elif action in ("focus", "restore"):
+        win["minimized"] = False
+        if url:
+            new_proc = open_in_app_mode(url, window_size=win.get("size", "1200,800"))
+            if new_proc:
+                win["proc"] = new_proc
+        return {"status": "focused", "key": key}
+
+    return {"error": "Ação inválida"}
 
 
 def cleanup_spawned_processes():
@@ -221,6 +325,8 @@ def cleanup_spawned_processes():
         except Exception:
             pass
     SPAWNED_PROCESSES.clear()
+    SPAWNED_PROCESSES_BY_APP.clear()
+    OPEN_WINDOWS.clear()
 
 
 def find_app_browser() -> str | None:
@@ -315,6 +421,9 @@ def start_app_process(app_id: str) -> dict:
             creationflags=creation_flags
         )
         SPAWNED_PROCESSES.append(proc)
+        if app_id not in SPAWNED_PROCESSES_BY_APP:
+            SPAWNED_PROCESSES_BY_APP[app_id] = []
+        SPAWNED_PROCESSES_BY_APP[app_id].append(proc)
 
         # Aguarda até 6 segundos para a porta abrir
         for _ in range(12):
@@ -349,7 +458,7 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
 
-        # 1. API: Status de todas as portas e IP
+        # 1. API: Status de todas as portas, IP, janelas abertas e jogos ativos
         if path == "/api/status":
             local_ip = get_local_ip()
             statuses = {}
@@ -357,6 +466,9 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
                 port = app.get("port")
                 active = is_port_open(port)
                 statuses[app_id] = {
+                    "id": app_id,
+                    "name": app.get("name"),
+                    "subtitle": app.get("subtitle"),
                     "active": active,
                     "port": port,
                     "admin_url": f"http://localhost:{port}{app['admin_path']}" if port else None,
@@ -365,6 +477,25 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "qr_url": f"http://{local_ip}:{port}{app['qr_path']}" if (port and app.get('qr_path')) else None,
                 }
 
+            # Limpa janelas cujo processo já foi fechado pelo usuário
+            for k in list(OPEN_WINDOWS.keys()):
+                p = OPEN_WINDOWS[k].get("proc")
+                if p and p.poll() is not None:
+                    del OPEN_WINDOWS[k]
+
+            open_win_data = {}
+            for k, v in OPEN_WINDOWS.items():
+                open_win_data[k] = {
+                    "key": k,
+                    "app_id": v.get("app_id"),
+                    "route": v.get("route"),
+                    "title": v.get("title"),
+                    "url": v.get("url"),
+                    "minimized": v.get("minimized", False)
+                }
+
+            running_apps = [aid for aid, st in statuses.items() if st["active"]]
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
@@ -372,7 +503,9 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "ip": local_ip,
                 "hub_port": PORT,
                 "apps": APPS,
-                "statuses": statuses
+                "statuses": statuses,
+                "running_apps": running_apps,
+                "open_windows": open_win_data
             }
             self.wfile.write(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
             return
@@ -424,17 +557,37 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
         if path == "/api/open":
             url = query.get("url", [None])[0]
             mode = query.get("mode", ["app"])[0]
-            window_size = query.get("size", ["1280,820"])[0]
+            window_size = query.get("size", ["1200,800"])[0]
+            app_id = query.get("app", [None])[0]
+            route = query.get("route", ["main"])[0]
+            title = query.get("title", ["Wizard Games"])[0]
+
             if url:
                 try:
+                    proc = None
                     if mode == "app":
-                        open_in_app_mode(url, window_size=window_size)
+                        proc = open_in_app_mode(url, window_size=window_size)
                     else:
                         webbrowser.open(url)
+
+                    # Registra a janela aberta
+                    window_key = f"{app_id}:{route}" if (app_id and route) else url
+                    OPEN_WINDOWS[window_key] = {
+                        "key": window_key,
+                        "app_id": app_id,
+                        "route": route,
+                        "title": title,
+                        "url": url,
+                        "size": window_size,
+                        "proc": proc,
+                        "minimized": False,
+                        "opened_at": time.time()
+                    }
+
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(b'{"success": true}')
+                    self.wfile.write(json.dumps({"success": True, "key": window_key}).encode())
                     return
                 except Exception as e:
                     self.send_response(500)
@@ -442,6 +595,50 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({"error": str(e)}).encode())
                     return
+
+        # 3.1 API: Encerrar um jogo em execução (Steam-style Hub)
+        if path == "/api/stop":
+            app_id = query.get("app", [None])[0]
+            if not app_id:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"error": "Parametro app obrigatorio"}')
+                return
+
+            result = stop_app_process(app_id)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode("utf-8"))
+            return
+
+        # 3.2 API: Encerrar todos os jogos ativos
+        if path == "/api/stop_all":
+            result = stop_all_apps()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode("utf-8"))
+            return
+
+        # 3.3 API: Ações em janelas de rotas (minimizar, focar, fechar)
+        if path == "/api/window":
+            key = query.get("key", [None])[0]
+            action = query.get("action", ["focus"])[0]
+            if not key:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"error": "Parametro key obrigatorio"}')
+                return
+
+            result = window_action(key, action)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode("utf-8"))
+            return
 
         # 4. API: Liberar Firewall
         if path == "/api/firewall":

@@ -19,6 +19,108 @@
 </head>
 <body>
 
+  <!-- ─── BOTÃO MENU FLUTUANTE (CANTO SUPERIOR ESQUERDO) ─────── -->
+  <button class="floating-menu-btn" id="floatingMenuBtn" onclick="toggleSidebar()" aria-label="Abrir Menu Lateral" title="Abrir Menu e Gerenciador de Jogos">
+    <span class="menu-icon-bars">
+      <span class="bar bar-1"></span>
+      <span class="bar bar-2"></span>
+      <span class="bar bar-3"></span>
+    </span>
+  </button>
+
+  <!-- ─── BACKDROP DO SIDEBAR FLUTUANTE ──────────────────────── -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+  <!-- ─── SIDEBAR FLUTUANTE EXPANSÍVEL ───────────────────────── -->
+  <aside class="floating-sidebar" id="floatingSidebar">
+    <!-- Topo do Sidebar: Título Vermelho 'MENU' conforme rabisco -->
+    <div class="sidebar-header">
+      <div class="sidebar-brand-title">
+        <span class="sidebar-brand-tag">WIZARD</span>
+        <h2 class="sidebar-red-title">MENU</h2>
+      </div>
+      <button class="sidebar-close-btn" onclick="closeSidebar()" title="Fechar Menu">&times;</button>
+    </div>
+
+    <!-- Conteúdo Rolável -->
+    <div class="sidebar-scrollable" id="sidebarScrollable">
+      
+      <!-- Seção 1: Configurações Fixas do Sistema -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-heading">CONFIGURAÇÕES FIXAS</div>
+
+        <!-- Card: Rede Wi-Fi & IP Local -->
+        <div class="sidebar-card">
+          <div class="card-icon-badge wifi">📶</div>
+          <div class="card-text-col">
+            <span class="card-sub-label">Rede Wi-Fi (IP da Sala)</span>
+            <span class="card-main-val" id="sidebarWifiIpText">Detectando...</span>
+          </div>
+          <button class="btn-sidebar-mini" onclick="copyToClipboard(hubState.ip || '127.0.0.1')" title="Copiar IP da sala">
+            📋 Copiar
+          </button>
+        </div>
+
+        <!-- Card: Firewall do Windows -->
+        <div class="sidebar-card">
+          <div class="card-icon-badge firewall">🛡️</div>
+          <div class="card-text-col">
+            <span class="card-sub-label">Firewall do Windows</span>
+            <span class="card-hint">Liberar conexões dos celulares</span>
+          </div>
+          <button class="btn-sidebar-action" onclick="triggerFirewall()">
+            Liberar
+          </button>
+        </div>
+
+        <!-- Card: Sincronização / Atualizar -->
+        <div class="sidebar-card">
+          <div class="card-icon-badge refresh">🔄</div>
+          <div class="card-text-col">
+            <span class="card-sub-label">Monitor de Portas</span>
+            <span class="card-hint">Sincronizar servidores</span>
+          </div>
+          <button class="btn-sidebar-action secondary" onclick="fetchStatus()">
+            Atualizar
+          </button>
+        </div>
+
+        <!-- Dica de Projeção Windows + P -->
+        <div class="sidebar-tip-box">
+          <span class="tip-icon">🖥️</span>
+          <div class="tip-content">
+            <strong>Dica de Projeção:</strong> Pressione <kbd>Win + P</kbd> no teclado para <em>Estender a Tela</em> para a TV ou projetor.
+          </div>
+        </div>
+
+        <!-- Ação Rápida: Parar Todos os Jogos -->
+        <button class="btn-stop-all-games" onclick="stopAllGames()" title="Encerra todos os jogos ativos e libera a memória RAM">
+          🧹 Encerrar Todos os Jogos
+        </button>
+      </div>
+
+      <!-- Risco / Linha Divisória conforme molde na imagem -->
+      <div class="sidebar-sketch-divider">
+        <span class="divider-line"></span>
+        <span class="divider-title">JOGOS EM EXECUÇÃO (HUB)</span>
+        <span class="divider-line"></span>
+      </div>
+
+      <!-- Seção 2: Jogos em Execução (Steam-like Hub com Sublistas Indentadas) -->
+      <div class="sidebar-section">
+        <div id="sidebarRunningGamesContainer">
+          <!-- Renderizado dinamicamente via hub.js -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Barra de progresso discreta de 15s de auto-close -->
+    <div class="sidebar-timer-bar-wrap" title="Auto-recolhe após 15 segundos sem interação">
+      <div class="sidebar-timer-bar" id="sidebarTimerBar"></div>
+    </div>
+  </aside>
+
   <!-- ─── TOP NAVBAR ─────────────────────────────────────────── -->
   <header class="hub-navbar">
     <a href="/" class="hub-brand">
