@@ -360,9 +360,14 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         # 4. API: Liberar Firewall
         if path == "/api/firewall":
-            firewall_bat = ROOT_DIR / "liberar-firewall.bat"
-            if firewall_bat.exists():
-                subprocess.Popen(["cmd.exe", "/c", str(firewall_bat)], cwd=str(ROOT_DIR), creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0)
+            firewall_ps1 = ROOT_DIR / "scripts" / "liberar-firewall.ps1"
+            if firewall_ps1.exists():
+                subprocess.Popen([
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy", "Bypass",
+                    "-File", str(firewall_ps1)
+                ], cwd=str(ROOT_DIR), creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
