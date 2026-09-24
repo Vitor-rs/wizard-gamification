@@ -100,7 +100,11 @@ try {
     Write-Host ""
     Write-Host "ERRO ao iniciar Two Truths & A Lie:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Pressione Enter para fechar esta janela..."
-    Read-Host
+    try {
+        if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {
+            Write-Host "Pressione Enter para fechar..."
+            Read-Host
+        }
+    } catch {}
+    exit 1
 }

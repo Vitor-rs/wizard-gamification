@@ -41,6 +41,12 @@ mimetypes.add_type("image/x-icon", ".ico")
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
 
+# Garante streams válidos no Windows (pythonw.exe)
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
+
 # Configura encoding de terminal seguro para Windows
 if sys.platform == "win32":
     try:
@@ -199,8 +205,77 @@ def is_port_open(port: int, host: str = "127.0.0.1") -> bool:
         return False
 
 
+SPAWNED_PROCESSES = []
+
+
+def cleanup_spawned_processes():
+    """Encerra todos os servidores de jogos iniciados em segundo plano."""
+    for proc in list(SPAWNED_PROCESSES):
+        try:
+            if proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=1.5)
+                except Exception:
+                    proc.kill()
+        except Exception:
+            pass
+    SPAWNED_PROCESSES.clear()
+
+
+def find_app_browser() -> str | None:
+    """Localiza executável do Edge, Chrome ou Brave para execução em modo Desktop App."""
+    candidates = [
+        os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+        os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+        os.path.expandvars(r"%LocalAppData%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+    ]
+    for p in candidates:
+        if os.path.isfile(p):
+            return p
+    return None
+
+
+def open_in_app_mode(url: str, window_size: str = "1280,820") -> subprocess.Popen | None:
+    """Abre URL em janela de aplicativo Desktop nativo (sem abas, sem barra de URLs)."""
+    browser = find_app_browser()
+    if not browser:
+        webbrowser.open(url)
+        return None
+
+    profile_dir = Path(os.path.expandvars(r"%LocalAppData%\WizardGames\AppData"))
+    profile_dir.mkdir(parents=True, exist_ok=True)
+
+    cmd = [
+        browser,
+        f"--app={url}",
+        f"--user-data-dir={profile_dir}",
+        f"--window-size={window_size}",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--disable-extensions",
+        "--disable-sync",
+        "--app-auto-launched"
+    ]
+
+    creation_flags = 0
+    if sys.platform == "win32":
+        creation_flags = 0x08000000  # CREATE_NO_WINDOW: zero consoles
+
+    try:
+        proc = subprocess.Popen(cmd, creationflags=creation_flags)
+        return proc
+    except Exception as e:
+        print(f"Erro ao abrir janela de app: {e}")
+        webbrowser.open(url)
+        return None
+
+
 def start_app_process(app_id: str) -> dict:
-    """Inicia o processo do aplicativo em janela própria e aguarda ele subir."""
+    """Inicia o processo do aplicativo em segundo plano sem abrir janelas de terminal."""
     app = APPS.get(app_id)
     if not app:
         return {"error": "Aplicativo não encontrado"}
@@ -229,16 +304,17 @@ def start_app_process(app_id: str) -> dict:
         cmd = ["cmd.exe", "/c", str(script_path)]
 
     try:
-        # Inicia em nova janela de console (não trava o Hub)
+        # Execução 100% invisível em segundo plano (sem janelas de prompt/PowerShell visíveis)
         creation_flags = 0
         if sys.platform == "win32":
-            creation_flags = subprocess.CREATE_NEW_CONSOLE
+            creation_flags = 0x08000000  # CREATE_NO_WINDOW
 
-        subprocess.Popen(
+        proc = subprocess.Popen(
             cmd,
             cwd=str(ROOT_DIR),
             creationflags=creation_flags
         )
+        SPAWNED_PROCESSES.append(proc)
 
         # Aguarda até 6 segundos para a porta abrir
         for _ in range(12):
@@ -254,6 +330,10 @@ def start_app_process(app_id: str) -> dict:
 class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(HUB_DIR), **kwargs)
+
+    def log_message(self, format, *args):
+        # Modo silencioso: evita erros de stream fechado em pythonw.exe
+        pass
 
     def end_headers(self):
         # Desabilita cache para a API e o Hub
@@ -340,12 +420,17 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(result).encode("utf-8"))
             return
 
-        # 3. API: Abrir URL no navegador padrão
+        # 3. API: Abrir URL em modo Desktop App ou navegador
         if path == "/api/open":
             url = query.get("url", [None])[0]
+            mode = query.get("mode", ["app"])[0]
+            window_size = query.get("size", ["1280,820"])[0]
             if url:
                 try:
-                    webbrowser.open(url)
+                    if mode == "app":
+                        open_in_app_mode(url, window_size=window_size)
+                    else:
+                        webbrowser.open(url)
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
@@ -366,8 +451,9 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "powershell.exe",
                     "-NoProfile",
                     "-ExecutionPolicy", "Bypass",
-                    "-File", str(firewall_ps1)
-                ], cwd=str(ROOT_DIR), creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0)
+                    "-File", str(firewall_ps1),
+                    "-Silent"
+                ], cwd=str(ROOT_DIR), creationflags=0x08000000 if sys.platform == "win32" else 0)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
@@ -393,11 +479,11 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
 def open_browser_after_delay():
     time.sleep(1.2)
     url = f"http://localhost:{PORT}"
-    print(f" [OK] Abrindo navegador padrao em: {url}")
+    print(f" [OK] Abrindo aplicativo Desktop em: {url}")
     try:
-        webbrowser.open(url)
+        open_in_app_mode(url)
     except Exception:
-        pass
+        webbrowser.open(url)
 
 
 def run_server():

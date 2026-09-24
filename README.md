@@ -4,18 +4,20 @@ Monorepo centralizado com alternativas open-source e self-hosted ao Kahoot, Wayg
 
 ---
 
-## 🚀 Inicialização Universal (Recomendado para Professores)
+## 🚀 Inicialização como Aplicativo Desktop (Zero Terminais e Zero Atrito)
 
-Para eliminar qualquer atrito cognitivo (sem precisar abrir terminal ou digitar portas):
+O projeto agora roda como um **Aplicativo Desktop nativo** (Chromium App Wrapper):
+- **100% Silencioso**: Zero janelas pretas de terminal, prompt de comando ou PowerShell abrindo na tela.
+- **Janela de App Dedicada**: Não abre abas em navegadores pessoais cheios de sites ou planilhas. Abre em sua própria janela de aplicativo com ícone oficial, sem barra de URLs e sem poluição visual.
+- **Gerenciamento Automático**: Ao fechar a janela do Wizard Games, todos os servidores em segundo plano são finalizados automaticamente.
 
-1. Dê dois cliques em **`Wizard Games.bat`** na raiz do projeto.
-2. O script cria automaticamente um atalho na sua **Área de Trabalho (`Wizard Games`)** com o ícone oficial da Wizard.
-3. Seu navegador padrão abrirá imediatamente no **Wizard Games Hub** (`http://localhost:7000`):
+1. Dê dois cliques no atalho **`Wizard Games`** na sua **Área de Trabalho** (ou em `Wizard Games.bat` na raiz).
+2. O aplicativo abre diretamente em sua própria janela desktop:
    - **1º Stroop Color Effect** e **2º Two Truths & A Lie** em destaque principal.
-   - Botões de **1 clique** para iniciar os servidores em segundo plano e abrir painéis.
+   - Botões de **1 clique** para abrir os painéis do professor e telas de projeção em janelas dedicadas.
    - Modal com **QR Code dinâmico** do seu IP Wi-Fi para os alunos escanearem.
    - Status em tempo real (Online/Offline) de todas as portas.
-   - Botão para liberar o Firewall do Windows com 1 clique.
+   - Botão para liberar o Firewall do Windows silenciosamente.
 
 ---
 

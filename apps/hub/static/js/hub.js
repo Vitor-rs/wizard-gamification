@@ -99,13 +99,15 @@ async function launchApp(appId, target = "admin") {
       url = `http://localhost:${port}/`;
     }
 
-    showToast(`🚀 Abrindo no seu navegador...`);
+    const windowSize = target === "display" ? "1280,720" : "1200,800";
+    showToast(`🚀 Abrindo aplicativo Desktop...`);
 
-    // Abre a aba no navegador do usuário
-    window.open(url, "_blank");
-
-    // Também aciona o backend para garantir foco
-    fetch(`/api/open?url=${encodeURIComponent(url)}`).catch(() => {});
+    // Abre em modo Desktop App nativo sem barra de endereços nem abas externas
+    try {
+      await fetch(`/api/open?url=${encodeURIComponent(url)}&mode=app&size=${windowSize}`);
+    } catch (e) {
+      window.open(url, "_blank");
+    }
   } catch (err) {
     showToast(`❌ Falha ao iniciar aplicativo: ${err.message}`);
   }

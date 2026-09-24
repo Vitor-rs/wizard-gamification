@@ -1,11 +1,14 @@
 param(
-    [switch]$Elevated
+    [switch]$Elevated,
+    [switch]$Silent
 )
 
-# Configura título da janela
-try {
-    $host.UI.RawUI.WindowTitle = "Wizard Games - Liberar Portas no Firewall do Windows"
-} catch {}
+# Configura titulo da janela se interativo
+if (-not $Silent) {
+    try {
+        $host.UI.RawUI.WindowTitle = "Wizard Games - Liberar Portas no Firewall do Windows"
+    } catch {}
+}
 
 # Verifica se esta rodando como Administrador
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -13,41 +16,52 @@ $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::A
 
 if (-not $isAdmin) {
     if ($Elevated) {
-        Write-Host ""
-        Write-Host " [!] Permissao de Administrador nao concedida." -ForegroundColor Red
-        Write-Host "     O firewall nao pode ser alterado sem privilegios de Administrador." -ForegroundColor Yellow
-        Write-Host ""
-        Write-Host "Pressione qualquer tecla para sair..."
-        try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Start-Sleep -Seconds 3 }
+        if (-not $Silent) {
+            Write-Host ""
+            Write-Host " [!] Permissao de Administrador nao concedida." -ForegroundColor Red
+            Write-Host "     O firewall nao pode ser alterado sem privilegios de Administrador." -ForegroundColor Yellow
+            Write-Host ""
+            Write-Host "Pressione qualquer tecla para sair..."
+            try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Start-Sleep -Seconds 3 }
+        }
         exit 1
     }
 
-    Write-Host ""
-    Write-Host " [i] Solicitando permissao de Administrador ao Windows (UAC)..." -ForegroundColor Cyan
-    Write-Host "     Por favor, clique em 'Sim' na janela do Windows que acabou de aparecer." -ForegroundColor Yellow
-    Write-Host ""
+    if (-not $Silent) {
+        Write-Host ""
+        Write-Host " [i] Solicitando permissao de Administrador ao Windows (UAC)..." -ForegroundColor Cyan
+        Write-Host "     Por favor, clique em 'Sim' na janela do Windows que acabou de aparecer." -ForegroundColor Yellow
+        Write-Host ""
+    }
+
+    $silentArg = if ($Silent) { " -Silent" } else { "" }
+    $windowStyle = if ($Silent) { "Hidden" } else { "Normal" }
 
     try {
-        Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" -Elevated"
+        Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" -Elevated$silentArg" -WindowStyle $windowStyle
         exit 0
     } catch {
-        Write-Host ""
-        Write-Host " [!] A permissao de Administrador foi cancelada pelo usuario." -ForegroundColor Yellow
-        Write-Host "     Nenhuma alteracao foi realizada no Firewall." -ForegroundColor Gray
-        Write-Host ""
-        Start-Sleep -Seconds 2
+        if (-not $Silent) {
+            Write-Host ""
+            Write-Host " [!] A permissao de Administrador foi cancelada pelo usuario." -ForegroundColor Yellow
+            Write-Host "     Nenhuma alteracao foi realizada no Firewall." -ForegroundColor Gray
+            Write-Host ""
+            Start-Sleep -Seconds 2
+        }
         exit 1
     }
 }
 
 # --- EXECUCAO ELEVADA (ADMINISTRADOR) ---
-try { Clear-Host } catch {}
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "   WIZARD GAMES - CONFIGURACAO DO FIREWALL DO WINDOWS" -ForegroundColor White
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Liberando portas para acesso dos celulares na rede Wi-Fi..." -ForegroundColor White
-Write-Host ""
+if (-not $Silent) {
+    try { Clear-Host } catch {}
+    Write-Host "============================================================" -ForegroundColor Cyan
+    Write-Host "   WIZARD GAMES - CONFIGURACAO DO FIREWALL DO WINDOWS" -ForegroundColor White
+    Write-Host "============================================================" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Liberando portas para acesso dos celulares na rede Wi-Fi..." -ForegroundColor White
+    Write-Host ""
+}
 
 $rules = @(
     @{ Port = 8000; Name = "Two Truths & A Lie" },
@@ -68,20 +82,24 @@ foreach ($r in $rules) {
     netsh advfirewall firewall delete rule name="$ruleName" > $null 2>&1
     
     # Adiciona regra de entrada permitindo conexoes TCP na porta
-    $res = netsh advfirewall firewall add rule name="$ruleName" dir=in action=allow protocol=TCP localport=$port profile=any
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "  [OK] Porta $port liberada" -ForegroundColor Green -NoNewline
-        Write-Host " ($name)" -ForegroundColor Gray
-    } else {
-        Write-Host "  [!] Falha ao liberar porta $port ($name)" -ForegroundColor Red
+    $res = netsh advfirewall firewall add rule name="$ruleName" dir=in action=allow protocol=TCP localport=$port profile=any > $null 2>&1
+    if (-not $Silent) {
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  [OK] Porta $port liberada" -ForegroundColor Green -NoNewline
+            Write-Host " ($name)" -ForegroundColor Gray
+        } else {
+            Write-Host "  [!] Falha ao liberar porta $port ($name)" -ForegroundColor Red
+        }
     }
 }
 
-Write-Host ""
-Write-Host "============================================================" -ForegroundColor Green
-Write-Host "  Sucesso! O firewall do Windows foi configurado." -ForegroundColor Green
-Write-Host "  Os celulares dos alunos agora podem acessar via Wi-Fi." -ForegroundColor White
-Write-Host "============================================================" -ForegroundColor Green
-Write-Host ""
-Write-Host "Pressione qualquer tecla para fechar esta janela..."
-try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Start-Sleep -Seconds 3 }
+if (-not $Silent) {
+    Write-Host ""
+    Write-Host "============================================================" -ForegroundColor Green
+    Write-Host "  Sucesso! O firewall do Windows foi configurado." -ForegroundColor Green
+    Write-Host "  Os celulares dos alunos agora podem acessar via Wi-Fi." -ForegroundColor White
+    Write-Host "============================================================" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Pressione qualquer tecla para fechar esta janela..."
+    try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Start-Sleep -Seconds 3 }
+}
