@@ -183,9 +183,15 @@
 
   </header>
 
-  <!-- ─── HERO BANNER ────────────────────────────────────────── -->
-  <section class="hub-hero">
-    <div class="hub-hero-badge">
+  <!-- ─── CONTAINER DE VIEWPORTS DAS ABAS DO NAVEGADOR ────────── -->
+  <div class="hub-tabs-viewport-container" id="hubTabsViewportContainer">
+    
+    <!-- VIEWPORT DA CENTRAL PRINCIPAL (HUB) -->
+    <div class="tab-viewport-panel active" id="viewport-hub">
+
+      <!-- ─── HERO BANNER ────────────────────────────────────────── -->
+      <section class="hub-hero">
+        <div class="hub-hero-badge">
       ⚡ Zero Atrito Cognitivo • Clique e Jogue
     </div>
     <h1 class="hub-hero-title">
@@ -388,6 +394,20 @@
 
   </main>
 
+      <!-- ─── FOOTER ─────────────────────────────────────────────── -->
+      <footer class="hub-footer">
+        Wizard Gamification Monorepo • Desenvolvido para a metodologia pedagógica Wizard by Pearson • Conectado à Rede Local
+      </footer>
+
+    </div><!-- /#viewport-hub -->
+
+    <!-- VIEWPORTS DINÂMICOS DOS JOGOS (CADA ABA É SUA PRÓPRIA PÁGINA) -->
+    <div class="dynamic-tabs-viewports" id="dynamicTabsViewports">
+      <!-- Renderizado dinamicamente via hub.js: iframes dos jogos abertos -->
+    </div>
+
+  </div><!-- /#hubTabsViewportContainer -->
+
   <!-- ─── MODAL QR CODE ALUNOS ───────────────────────────────── -->
   <div class="hub-modal-overlay" id="qrModal">
     <div class="hub-modal">
@@ -419,10 +439,6 @@
     <span id="toastMsg">Notificação</span>
   </div>
 
-  <!-- ─── FOOTER ─────────────────────────────────────────────── -->
-  <footer class="hub-footer">
-    Wizard Gamification Monorepo • Desenvolvido para a metodologia pedagógica Wizard by Pearson • Conectado à Rede Local
-  </footer>
 
   <script src="/static/js/hub.js"></script>
 </body>

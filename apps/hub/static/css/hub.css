@@ -1490,3 +1490,238 @@ body {
   transform-origin: left;
   transition: transform 0.1s linear;
 }
+
+/* ─── VIEWPORTS DAS ABAS DO NAVEGADOR (PÁGINA DO JOGO NA PRÓPRIA ABA) ─── */
+.hub-tabs-viewport-container {
+  width: 100%;
+  min-height: calc(100vh - 104px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.tab-viewport-panel {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+}
+
+.tab-viewport-panel.active {
+  display: flex;
+  flex: 1;
+}
+
+#viewport-hub.active {
+  display: block;
+}
+
+.dynamic-tabs-viewports {
+  display: contents;
+}
+
+.game-viewport-panel {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100vh - 104px);
+  background: #05081E;
+  overflow: hidden;
+  position: relative;
+}
+
+.game-viewport-panel.active {
+  display: flex;
+}
+
+/* Barra de ferramentas da aba do jogo */
+.tab-viewport-toolbar {
+  height: 38px;
+  min-height: 38px;
+  background: #070B24;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 10;
+  user-select: none;
+}
+
+.tab-viewport-url-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.url-badge {
+  font-size: 0.64rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--wiz-cyan);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.url-text {
+  font-size: 0.78rem;
+  color: var(--wiz-gray-400);
+  font-family: 'Consolas', 'Courier New', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-viewport-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-tab-tool {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.18s ease;
+}
+
+.btn-tab-tool:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+}
+
+.btn-tab-tool.popout {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #93C5FD;
+}
+
+.btn-tab-tool.popout:hover {
+  background: #2563EB;
+  border-color: #2563EB;
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.btn-tab-tool.close:hover {
+  background: rgba(231, 0, 34, 0.25);
+  border-color: #E70022;
+  color: #FF6B7D;
+}
+
+.tab-iframe-wrapper {
+  flex: 1;
+  width: 100%;
+  height: calc(100% - 38px);
+  position: relative;
+  background: #05081E;
+}
+
+.tab-game-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #05081E;
+  display: block;
+}
+
+/* Estado da Aba quando Destacada em Janela Externa */
+.tab-detached-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: radial-gradient(circle at center, #0F1745 0%, #05081E 100%);
+  height: 100%;
+}
+
+.tab-detached-placeholder .detached-icon {
+  font-size: 3.2rem;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.5));
+}
+
+.tab-detached-placeholder h3 {
+  color: #FFFFFF;
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.tab-detached-placeholder p {
+  color: var(--wiz-gray-400);
+  font-size: 0.92rem;
+  max-width: 520px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.tab-detached-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Drag & Drop Tear-Off feedback */
+.browser-tab.dragging {
+  opacity: 0.4;
+  border: 1.5px dashed #3B82F6;
+  transform: scale(0.95);
+}
+
+.browser-tab.detached {
+  border-style: dashed;
+  border-color: rgba(255, 184, 0, 0.5);
+}
+
+.tab-detached-badge {
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 184, 0, 0.2);
+  color: #FCD34D;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 2px;
+}
+
+.tab-popout-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--wiz-gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+.tab-popout-btn:hover {
+  background: rgba(59, 130, 246, 0.3);
+  color: #93C5FD;
+  transform: scale(1.15);
+}

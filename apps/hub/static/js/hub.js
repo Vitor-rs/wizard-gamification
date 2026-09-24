@@ -1,7 +1,10 @@
 /**
  * 🎮 WIZARD GAMES HUB — CLIENT JAVASCRIPT
- * Atualiza status em tempo real, gerencia inicialização de jogos,
- * barra de abas estilo navegador no header, menu lateral flutuante e janelas.
+ * Sistema de Abas de Navegador Real (Browser Tabs):
+ *  - Cada aba aberta é o próprio jogo interativo (embarcado sem sair do aplicativo)
+ *  - Suporte a Drag-and-Drop Tear-Off (arrastar a aba para fora para destacar em janela inteira)
+ *  - Suporte a re-acoplamento da janela de volta à aba
+ *  - Menu lateral flutuante e auto-hide de 15 segundos
  */
 
 let hubState = {
@@ -12,6 +15,13 @@ let hubState = {
   open_windows: {}
 };
 
+// Registro de Abas Abertas no Navegador
+// chave: "appId:route" (ex: "stroop:admin") -> { key, appId, route, title, url, detached, openedAt }
+const openTabs = {};
+
+// Aba atualmente selecionada ("hub" ou "appId:route")
+let currentActiveTabKey = "hub";
+
 // ─── ELEMENTOS DOM ──────────────────────────────────────────
 const wifiIpText = document.getElementById("wifiIpText");
 const sidebarWifiIpText = document.getElementById("sidebarWifiIpText");
@@ -21,10 +31,16 @@ const qrModal = document.getElementById("qrModal");
 const qrImg = document.getElementById("qrImg");
 const qrLinkInput = document.getElementById("qrLinkInput");
 
-// Elementos da Barra de Abas (Browser Tabs)
+// Elementos da Barra de Abas do Navegador
 const dynamicBrowserTabs = document.getElementById("dynamicBrowserTabs");
 const openWindowsCount = document.getElementById("openWindowsCount");
 const tabHub = document.getElementById("tab-hub");
+const browserTabsTrack = document.getElementById("browserTabsTrack");
+const browserTabsBar = document.getElementById("browserTabsBar");
+
+// Viewports das Abas
+const viewportHub = document.getElementById("viewport-hub");
+const dynamicTabsViewports = document.getElementById("dynamicTabsViewports");
 
 // Elementos do Sidebar Flutuante
 const floatingMenuBtn = document.getElementById("floatingMenuBtn");
@@ -32,9 +48,6 @@ const sidebarBackdrop = document.getElementById("sidebarBackdrop");
 const floatingSidebar = document.getElementById("floatingSidebar");
 const sidebarRunningGamesContainer = document.getElementById("sidebarRunningGamesContainer");
 const sidebarTimerBar = document.getElementById("sidebarTimerBar");
-
-// Estado da Aba Ativa
-let currentActiveTabKey = "hub";
 
 // ─── TIMER DE AUTO-CLOSE (15s DE INATIVIDADE NO SIDEBAR) ─────
 const AUTO_CLOSE_MS = 15000;
@@ -129,51 +142,172 @@ async function copyToClipboard(text) {
   }
 }
 
+// ─── ABRIR JOGO EM UMA NOVA ABA (O JOGO É A PRÓPRIA PÁGINA) ──
+async function openGameTab(appId, target = "admin") {
+  const appConfig = (hubState.apps && hubState.apps[appId]) || {};
+  const appName = appConfig.name || (appId === 'stroop' ? 'Stroop Color' : appId === 'two-truths' ? 'Two Truths' : appId);
+  const routeLabel = target === "display" ? "Projetor" : "Professor";
+  const key = `${appId}:${target}`;
+
+  // Se a aba já estiver aberta, apenas foca nela
+  if (openTabs[key]) {
+    selectBrowserTab(key);
+    showToast(`🔍 Alternado para a aba: ${appName} (${routeLabel})`);
+    return;
+  }
+
+  showToast(`⚡ Inicializando ${appName} em uma nova aba...`);
+
+  try {
+    // 1. Inicia processo em segundo plano (se ainda não ativo)
+    await fetch(`/api/start?app=${encodeURIComponent(appId)}`);
+
+    // 2. Determina URL do jogo
+    await fetchStatus();
+    const appStatus = hubState.statuses[appId] || {};
+    let url = target === "display" ? appStatus.display_url : appStatus.admin_url;
+
+    if (!url) {
+      const port = appStatus.port || appConfig.port || 3000;
+      url = target === "display" ? `http://localhost:${port}/display` : `http://localhost:${port}/admin`;
+    }
+
+    const title = `${appName} • ${routeLabel}`;
+
+    // 3. Registra na estrutura de abas
+    openTabs[key] = {
+      key,
+      appId,
+      route: target,
+      title,
+      url,
+      detached: false,
+      openedAt: Date.now()
+    };
+
+    // 4. Cria o Viewport do jogo contendo o iframe interativo
+    createTabViewport(key, url, title, appId, target);
+
+    // 5. Renderiza a barra de abas no header
+    renderBrowserTabs();
+
+    // 6. Seleciona a nova aba como ativa
+    selectBrowserTab(key);
+
+    showToast(`🚀 ${title} carregado na aba! Arraste-a para fora para criar uma janela inteira.`);
+
+  } catch (err) {
+    showToast(`❌ Falha ao abrir aba: ${err.message}`);
+  }
+}
+
+// Compatibilidade com cliques nos botões dos cards
+window.launchApp = openGameTab;
+
+// ─── CRIAR VIEWPORT DO JOGO COM IFRAME E TOOLBAR ────────────
+function createTabViewport(key, url, title, appId, target) {
+  if (!dynamicTabsViewports) return;
+
+  // Remove viewport existente com mesma chave se houver
+  const existing = document.getElementById(`viewport-${key}`);
+  if (existing) existing.remove();
+
+  const panel = document.createElement("div");
+  panel.className = "game-viewport-panel";
+  panel.id = `viewport-${key}`;
+
+  panel.innerHTML = `
+    <!-- Barra de Ferramentas da Aba -->
+    <div class="tab-viewport-toolbar">
+      <div class="tab-viewport-url-info">
+        <span class="url-badge">WIZARD LOCAL</span>
+        <span class="url-text">${url}</span>
+      </div>
+
+      <div class="tab-viewport-actions">
+        <button class="btn-tab-tool popout" onclick="detachTabToWindow('${key}')" title="Destacar esta aba em uma janela inteira separada (ideal para projetor / 2ª tela)">
+          🗗 Destacar Janela
+        </button>
+        <button class="btn-tab-tool" onclick="reloadTabFrame('${key}')" title="Recarregar esta tela">
+          🔄 Recarregar
+        </button>
+        <button class="btn-tab-tool close" onclick="closeBrowserTab('${key}')" title="Fechar esta aba">
+          ✕ Fechar
+        </button>
+      </div>
+    </div>
+
+    <!-- Área do Iframe Interativo do Jogo -->
+    <div class="tab-iframe-wrapper" id="frame-wrap-${key}">
+      <iframe src="${url}" 
+              id="iframe-${key}" 
+              class="tab-game-iframe" 
+              allow="camera; microphone; autoplay; fullscreen; display-capture"
+              title="${title}">
+      </iframe>
+    </div>
+  `;
+
+  dynamicTabsViewports.appendChild(panel);
+}
+
 // ─── RENDERIZAR ABAS DE NAVEGADOR NO HEADER ─────────────────
-function renderBrowserTabs(openWindows) {
-  const winEntries = Object.entries(openWindows || {});
-  const totalWindows = 1 + winEntries.length; // 1 (Hub) + N janelas abertas
+function renderBrowserTabs() {
+  const tabEntries = Object.entries(openTabs);
+  const totalWindows = 1 + tabEntries.length; // Hub + N abas abertas
 
   // 1. Atualiza contador no canto direito
   if (openWindowsCount) {
-    openWindowsCount.textContent = `${totalWindows} ${totalWindows === 1 ? 'janela ativa' : 'janelas ativas'}`;
+    openWindowsCount.textContent = `${totalWindows} ${totalWindows === 1 ? 'aba ativa' : 'abas ativas'}`;
   }
 
   // 2. Se a aba ativa não existe mais, volta para a aba do Hub
-  if (currentActiveTabKey !== "hub" && (!openWindows || !openWindows[currentActiveTabKey])) {
+  if (currentActiveTabKey !== "hub" && !openTabs[currentActiveTabKey]) {
     currentActiveTabKey = "hub";
   }
 
-  // 3. Atualiza estado ativo da aba do Hub
+  // 3. Atualiza estado ativo da aba fixa do Hub
   if (tabHub) {
     tabHub.classList.toggle("active", currentActiveTabKey === "hub");
   }
 
-  // 4. Constrói HTML das abas dinâmicas
+  // 4. Constrói HTML das abas dinâmicas com suporte a Drag & Drop
   if (!dynamicBrowserTabs) return;
 
   let tabsHtml = "";
-  for (const [key, win] of winEntries) {
-    const appId = win.app_id || "";
-    const route = win.route || "";
-    const appConfig = (hubState.apps && hubState.apps[appId]) || {};
-    const appName = appConfig.name || win.title || appId;
-    const icon = appConfig.icon || (appId === "stroop" ? "🎨" : appId === "two-truths" ? "🎭" : "🎮");
-    const routeLabel = route === "display" ? "Projetor" : route === "admin" ? "Professor" : route;
+  for (const [key, tab] of tabEntries) {
+    const appConfig = (hubState.apps && hubState.apps[tab.appId]) || {};
+    const appName = appConfig.name || (tab.appId === 'stroop' ? 'Stroop Color' : tab.appId === 'two-truths' ? 'Two Truths' : tab.appId);
+    const icon = appConfig.icon || (tab.appId === "stroop" ? "🎨" : tab.appId === "two-truths" ? "🎭" : "🎮");
+    const routeLabel = tab.route === "display" ? "Projetor" : tab.route === "admin" ? "Professor" : tab.route;
     const isActive = (currentActiveTabKey === key);
 
     tabsHtml += `
-      <div class="browser-tab dynamic-tab ${isActive ? 'active' : ''}"
+      <div class="browser-tab dynamic-tab ${isActive ? 'active' : ''} ${tab.detached ? 'detached' : ''}"
            id="tab-${key}"
            data-key="${key}"
-           onclick="focusWindowFromTab('${key}')"
-           title="Focar janela: ${appName} (${routeLabel})">
+           draggable="true"
+           ondragstart="handleTabDragStart(event, '${key}')"
+           ondragend="handleTabDragEnd(event, '${key}')"
+           onclick="selectBrowserTab('${key}')"
+           title="Clique para alternar. Arraste para fora para abrir como janela inteira: ${appName} (${routeLabel})">
         <span class="tab-favicon">${icon}</span>
-        <span class="tab-route-pill ${route}">${routeLabel}</span>
+        <span class="tab-route-pill ${tab.route}">${routeLabel}</span>
         <span class="tab-title">${appName}</span>
+        ${tab.detached ? `<span class="tab-detached-badge" title="Aberta em janela separada">🗗 Janela</span>` : ''}
+
+        <!-- Botão para Destacar em Janela Separada -->
+        <button class="tab-popout-btn"
+                onclick="detachTabToWindow('${key}', event)"
+                title="${tab.detached ? 'Focar janela externa' : 'Destacar em janela inteira separada (ideal para projetor)'}"
+                aria-label="Destacar janela">
+          ${tab.detached ? '🔍' : '🗗'}
+        </button>
+
+        <!-- Botão Fechar Aba -->
         <button class="tab-close-btn"
-                onclick="closeWindowFromTab(event, '${key}')"
-                title="Fechar janela (✕)"
+                onclick="closeBrowserTab('${key}', event)"
+                title="Fechar aba (✕)"
                 aria-label="Fechar aba">✕</button>
       </div>
     `;
@@ -182,11 +316,11 @@ function renderBrowserTabs(openWindows) {
   dynamicBrowserTabs.innerHTML = tabsHtml;
 }
 
-// ─── SELECIONAR ABA DO NAVEGADOR ────────────────────────────
+// ─── SELECIONAR ABA DO NAVEGADOR (TROCA DE CONTEÚDO) ────────
 function selectBrowserTab(key) {
   currentActiveTabKey = key;
 
-  // Atualiza classes ativas
+  // 1. Atualiza abas no header
   if (tabHub) {
     tabHub.classList.toggle("active", key === "hub");
   }
@@ -195,58 +329,196 @@ function selectBrowserTab(key) {
     tab.classList.toggle("active", tab.dataset.key === key);
   });
 
+  // 2. Atualiza viewports de exibição
+  if (viewportHub) {
+    viewportHub.classList.toggle("active", key === "hub");
+  }
+
+  document.querySelectorAll(".game-viewport-panel").forEach(panel => {
+    panel.classList.toggle("active", panel.id === `viewport-${key}`);
+  });
+
+  // 3. Comportamento específico
   if (key === "hub") {
-    // Traz foco para a janela do Hub
-    fetch("/api/window?key=hub&action=focus").catch(() => {});
     window.scrollTo({ top: 0, behavior: "smooth" });
-    showToast("🎮 Central de Jogos em foco");
+  } else {
+    const tab = openTabs[key];
+    if (tab && tab.detached) {
+      focusDetachedWindow(key);
+    }
   }
 }
 
-// ─── FOCAR JANELA A PARTIR DA ABA ───────────────────────────
-async function focusWindowFromTab(key) {
-  selectBrowserTab(key);
-  try {
-    const res = await fetch(`/api/window?key=${encodeURIComponent(key)}&action=focus`);
-    const data = await res.json();
-    const win = hubState.open_windows && hubState.open_windows[key];
-    const title = win ? (win.title || key) : key;
-    showToast(`🔍 Focando janela: ${title}`);
-  } catch (err) {
-    console.error("Erro ao focar janela:", err);
-  }
-}
+// ─── FECHAR ABA (REMOVE IFRAME E RESTAURA O HUB) ─────────────
+async function closeBrowserTab(key, event) {
+  if (event) event.stopPropagation();
 
-// ─── FECHAR JANELA A PARTIR DO BOTÃO '✕' DA ABA ─────────────
-async function closeWindowFromTab(event, key) {
-  event.stopPropagation(); // Evita focar a janela ao fechar
-
-  // Animação instantânea de fechamento da aba
+  const tab = openTabs[key];
   const tabEl = document.getElementById(`tab-${key}`);
   if (tabEl) {
     tabEl.classList.add("closing");
   }
 
-  try {
-    const win = hubState.open_windows && hubState.open_windows[key];
-    const title = win ? (win.title || key) : "Janela";
-
-    await fetch(`/api/window?key=${encodeURIComponent(key)}&action=close`);
-
-    if (hubState.open_windows) {
-      delete hubState.open_windows[key];
-    }
-
-    showToast(`✕ Janela fechada: ${title}`);
-
-    if (currentActiveTabKey === key) {
-      selectBrowserTab("hub");
-    }
-
-    setTimeout(fetchStatus, 200);
-  } catch (err) {
-    showToast(`❌ Erro ao fechar janela: ${err.message}`);
+  // Se a aba estava destacada como janela externa, fecha a janela no Windows
+  if (tab && tab.detached) {
+    fetch(`/api/window?key=${encodeURIComponent(key)}&action=close`).catch(() => {});
   }
+
+  setTimeout(() => {
+    // Remove o painel do viewport do DOM
+    const panelEl = document.getElementById(`viewport-${key}`);
+    if (panelEl) panelEl.remove();
+
+    // Remove do registro
+    delete openTabs[key];
+
+    // Se a aba fechada era a ativa, volta para a aba anterior ou para o Hub
+    if (currentActiveTabKey === key) {
+      const remainingKeys = Object.keys(openTabs);
+      if (remainingKeys.length > 0) {
+        selectBrowserTab(remainingKeys[remainingKeys.length - 1]);
+      } else {
+        selectBrowserTab("hub");
+      }
+    }
+
+    renderBrowserTabs();
+    showToast("✕ Aba fechada.");
+  }, 200);
+}
+
+// ─── RECARREGAR IFRAME DA ABA ───────────────────────────────
+function reloadTabFrame(key) {
+  const tab = openTabs[key];
+  const iframe = document.getElementById(`iframe-${key}`);
+  if (tab && iframe) {
+    iframe.src = tab.url;
+    showToast("🔄 Tela recarregada.");
+  }
+}
+
+// ─── DESTAQUE DE ABA: TRANSFORMAR EM JANELA INTEIRA ─────────
+async function detachTabToWindow(key, event) {
+  if (event) event.stopPropagation();
+
+  const tab = openTabs[key];
+  if (!tab) return;
+
+  if (tab.detached) {
+    // Já está destacada: foca a janela externa
+    focusDetachedWindow(key);
+    return;
+  }
+
+  showToast(`🗗 Destacando ${tab.title} em janela inteira...`);
+
+  tab.detached = true;
+  const windowSize = tab.route === "display" ? "1280,720" : "1200,800";
+
+  // 1. Abre como janela Desktop independente do Windows (Edge/Chrome App Mode)
+  try {
+    await fetch(`/api/open?url=${encodeURIComponent(tab.url)}&mode=app&size=${windowSize}&app=${encodeURIComponent(tab.appId)}&route=${encodeURIComponent(tab.route)}&title=${encodeURIComponent(tab.title)}`);
+  } catch (e) {
+    window.open(tab.url, "_blank");
+  }
+
+  // 2. Substitui o iframe pelo placeholder de janela destacada
+  const wrap = document.getElementById(`frame-wrap-${key}`);
+  if (wrap) {
+    wrap.innerHTML = `
+      <div class="tab-detached-placeholder">
+        <div class="detached-icon">🗗</div>
+        <h3>Tela Aberta em Janela Separada</h3>
+        <p>
+          Esta tela foi destacada para uma janela independente do Windows. 
+          Você pode arrastá-la livremente para a TV ou projetor da sala (<kbd>Win + P</kbd>).
+        </p>
+        <div class="tab-detached-actions">
+          <button class="btn-primary" onclick="focusDetachedWindow('${key}')">
+            🔍 Focar Janela Externa
+          </button>
+          <button class="btn-secondary" onclick="reattachTab('${key}')">
+            ↩ Acoplar de Volta nesta Aba
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // 3. Atualiza abas no topo
+  renderBrowserTabs();
+  showToast("🗗 Janela destacada com sucesso!");
+}
+
+// ─── FOCAR JANELA EXTERNA DESTACADA ─────────────────────────
+async function focusDetachedWindow(key) {
+  try {
+    await fetch(`/api/window?key=${encodeURIComponent(key)}&action=focus`);
+    const tab = openTabs[key];
+    showToast(`🔍 Focando janela externa: ${tab ? tab.title : key}`);
+  } catch (err) {
+    console.error("Erro ao focar janela destacada:", err);
+  }
+}
+
+// ─── ACOPLAR JANELA DE VOLTA NA ABA DO HUB ──────────────────
+async function reattachTab(key) {
+  const tab = openTabs[key];
+  if (!tab) return;
+
+  showToast(`↩ Acoplando ${tab.title} de volta ao Hub...`);
+
+  // 1. Fecha a janela externa no Windows
+  try {
+    await fetch(`/api/window?key=${encodeURIComponent(key)}&action=close`);
+  } catch (e) {}
+
+  tab.detached = false;
+
+  // 2. Restaura o iframe dentro do Hub
+  const wrap = document.getElementById(`frame-wrap-${key}`);
+  if (wrap) {
+    wrap.innerHTML = `
+      <iframe src="${tab.url}" 
+              id="iframe-${key}" 
+              class="tab-game-iframe" 
+              allow="camera; microphone; autoplay; fullscreen; display-capture"
+              title="${tab.title}">
+      </iframe>
+    `;
+  }
+
+  // 3. Atualiza estado e foca na aba
+  renderBrowserTabs();
+  selectBrowserTab(key);
+  showToast("↩ Janela re-acoplada com sucesso!");
+}
+
+// ─── DRAG & DROP TEAR-OFF (ARRASTAR A ABA PARA FORA) ─────────
+let draggedKey = null;
+
+function handleTabDragStart(e, key) {
+  draggedKey = key;
+  e.dataTransfer.setData("text/plain", key);
+  e.dataTransfer.effectAllowed = "move";
+
+  const tabEl = document.getElementById(`tab-${key}`);
+  if (tabEl) tabEl.classList.add("dragging");
+}
+
+function handleTabDragEnd(e, key) {
+  const tabEl = document.getElementById(`tab-${key}`);
+  if (tabEl) tabEl.classList.remove("dragging");
+
+  // Se soltou fora da barra de abas (arrastou para baixo ou para a tela)
+  const tabsBarRect = browserTabsBar ? browserTabsBar.getBoundingClientRect() : { bottom: 60 };
+  const isOutsideTabsBar = (e.clientY > tabsBarRect.bottom + 15) || (e.clientY < 0) || (e.clientX < 0) || (e.clientX > window.innerWidth);
+
+  if (isOutsideTabsBar) {
+    detachTabToWindow(key);
+  }
+
+  draggedKey = null;
 }
 
 // ─── ATUALIZAR STATUS DO HUB E DOS JOGOS ────────────────────
@@ -281,10 +553,7 @@ async function fetchStatus() {
       }
     }
 
-    // 4. Renderiza Abas de Navegador no Header
-    renderBrowserTabs(data.open_windows || {});
-
-    // 5. Renderiza seção de jogos ativos no Sidebar
+    // 4. Renderiza seção de jogos ativos no Sidebar
     renderRunningGames(data);
 
   } catch (err) {
@@ -318,7 +587,6 @@ function renderRunningGames(data) {
   }
 
   let html = "";
-  const openWindows = data.open_windows || {};
 
   for (const appId of runningAppIds) {
     const appConfig = (data.apps && data.apps[appId]) || {};
@@ -329,8 +597,8 @@ function renderRunningGames(data) {
 
     const adminKey = `${appId}:admin`;
     const displayKey = `${appId}:display`;
-    const adminWin = openWindows[adminKey];
-    const displayWin = openWindows[displayKey];
+    const adminTab = openTabs[adminKey];
+    const displayTab = openTabs[displayKey];
 
     html += `
       <div class="running-game-card">
@@ -357,14 +625,11 @@ function renderRunningGames(data) {
               <span class="route-title-text">Controle / Admin</span>
             </div>
             <div class="route-actions">
-              <button class="btn-route-action focus" onclick="launchApp('${appId}', 'admin')" title="Focar ou reabrir janela de controle">
-                🔍 Focar
+              <button class="btn-route-action focus" onclick="openGameTab('${appId}', 'admin')" title="Abrir ou alternar para a aba do Professor">
+                🔍 ${adminTab ? 'Aba Ativa' : 'Abrir'}
               </button>
-              ${adminWin ? `
-              <button class="btn-route-action min" onclick="windowAction('${adminKey}', 'minimize')" title="Minimizar janela">
-                _
-              </button>
-              <button class="btn-route-action close" onclick="windowAction('${adminKey}', 'close')" title="Fechar janela">
+              ${adminTab ? `
+              <button class="btn-route-action close" onclick="closeBrowserTab('${adminKey}')" title="Fechar aba">
                 ✕
               </button>
               ` : ''}
@@ -378,14 +643,11 @@ function renderRunningGames(data) {
               <span class="route-title-text">Display da Turma</span>
             </div>
             <div class="route-actions">
-              <button class="btn-route-action focus" onclick="launchApp('${appId}', 'display')" title="Focar ou reabrir tela do projetor">
-                🔍 Focar
+              <button class="btn-route-action focus" onclick="openGameTab('${appId}', 'display')" title="Abrir ou alternar para a aba do Projetor">
+                🔍 ${displayTab ? 'Aba Ativa' : 'Abrir'}
               </button>
-              ${displayWin ? `
-              <button class="btn-route-action min" onclick="windowAction('${displayKey}', 'minimize')" title="Minimizar janela">
-                _
-              </button>
-              <button class="btn-route-action close" onclick="windowAction('${displayKey}', 'close')" title="Fechar janela">
+              ${displayTab ? `
+              <button class="btn-route-action close" onclick="closeBrowserTab('${displayKey}')" title="Fechar aba">
                 ✕
               </button>
               ` : ''}
@@ -399,65 +661,22 @@ function renderRunningGames(data) {
   sidebarRunningGamesContainer.innerHTML = html;
 }
 
-// ─── INICIALIZAR OU ABRIR JOGO ──────────────────────────────
-async function launchApp(appId, target = "admin") {
-  const appConfig = (hubState.apps && hubState.apps[appId]) || {};
-  const appName = appConfig.name || (appId === 'stroop' ? 'Stroop Color' : appId === 'two-truths' ? 'Two Truths' : appId);
-  showToast(`⚡ Inicializando ${appName}...`);
-
-  // Define a nova aba como ativa
-  const windowKey = `${appId}:${target}`;
-  currentActiveTabKey = windowKey;
-
-  try {
-    // 1. Inicia processo em segundo plano (se ainda não ativo)
-    const res = await fetch(`/api/start?app=${encodeURIComponent(appId)}`);
-    const data = await res.json();
-
-    if (data.error) {
-      showToast(`❌ Erro: ${data.error}`);
-      return;
-    }
-
-    // 2. Determina a URL
-    await fetchStatus();
-    const appStatus = hubState.statuses[appId] || {};
-    let url = target === "display" ? appStatus.display_url : appStatus.admin_url;
-
-    if (!url) {
-      const port = data.port || (hubState.apps[appId] && hubState.apps[appId].port);
-      url = target === "display" ? `http://localhost:${port}/display` : `http://localhost:${port}/admin`;
-    }
-
-    const windowSize = target === "display" ? "1280,720" : "1200,800";
-    const windowTitle = `${appName} - ${target === 'display' ? 'Tela do Projetor' : 'Painel do Professor'}`;
-    showToast(`🚀 Abrindo aplicativo Desktop (${target === 'display' ? 'Projetor' : 'Professor'})...`);
-
-    // 3. Abre em modo Desktop App nativo registrando rota e título
-    try {
-      await fetch(`/api/open?url=${encodeURIComponent(url)}&mode=app&size=${windowSize}&app=${encodeURIComponent(appId)}&route=${encodeURIComponent(target)}&title=${encodeURIComponent(windowTitle)}`);
-      await fetchStatus();
-    } catch (e) {
-      window.open(url, "_blank");
-    }
-  } catch (err) {
-    showToast(`❌ Falha ao iniciar aplicativo: ${err.message}`);
-  }
-}
-
 // ─── FINALIZAR UM JOGO ──────────────────────────────────────
 async function stopGame(appId) {
   const appConfig = (hubState.apps && hubState.apps[appId]) || {};
   const appName = appConfig.name || appConfig.title || appId;
   showToast(`🧹 Encerrando ${appName}...`);
 
-  if (currentActiveTabKey.startsWith(appId + ":")) {
-    currentActiveTabKey = "hub";
+  // Fecha todas as abas abertas pertencentes a este app
+  for (const key of Object.keys(openTabs)) {
+    if (key.startsWith(appId + ":")) {
+      closeBrowserTab(key);
+    }
   }
 
   try {
     const res = await fetch(`/api/stop?app=${encodeURIComponent(appId)}`);
-    const data = await res.json();
+    await res.json();
     await fetchStatus();
     showToast(`✅ ${appName} encerrado com sucesso!`);
   } catch (err) {
@@ -468,36 +687,19 @@ async function stopGame(appId) {
 // ─── FINALIZAR TODOS OS JOGOS ───────────────────────────────
 async function stopAllGames() {
   showToast("🧹 Encerrando todos os jogos ativos...");
-  currentActiveTabKey = "hub";
+
+  // Fecha todas as abas de jogos
+  for (const key of Object.keys(openTabs)) {
+    closeBrowserTab(key);
+  }
+  selectBrowserTab("hub");
 
   try {
-    const res = await fetch("/api/stop_all");
-    const data = await res.json();
+    await fetch("/api/stop_all");
     await fetchStatus();
     showToast("✅ Todos os jogos foram encerrados com sucesso!");
   } catch (err) {
     showToast(`❌ Erro ao encerrar jogos: ${err.message}`);
-  }
-}
-
-// ─── AÇÕES DE JANELA (FOCAR, MINIMIZAR, FECHAR) ─────────────
-async function windowAction(key, action) {
-  try {
-    const res = await fetch(`/api/window?key=${encodeURIComponent(key)}&action=${encodeURIComponent(action)}`);
-    const data = await res.json();
-    if (action === "close") {
-      showToast("Janela fechada.");
-      if (currentActiveTabKey === key) {
-        selectBrowserTab("hub");
-      }
-    } else if (action === "minimize") {
-      showToast("Janela minimizada.");
-    } else {
-      showToast("Janela restaurada.");
-    }
-    await fetchStatus();
-  } catch (err) {
-    console.error("Erro na ação de janela:", err);
   }
 }
 
@@ -537,7 +739,7 @@ async function triggerFirewall() {
 // ─── INICIALIZAÇÃO E EVENTOS ────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   fetchStatus();
-  setInterval(fetchStatus, 3000);
+  setInterval(fetchStatus, 3500);
 
   // Fechar modal de QR Code ao clicar fora
   if (qrModal) {
@@ -561,6 +763,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (qrModal && qrModal.classList.contains("active")) {
         closeStudentQr();
+      }
+    }
+  });
+
+  // Eventos globais de arrastar para fora (Tear-Off)
+  document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+  });
+
+  document.addEventListener("drop", (e) => {
+    const key = e.dataTransfer.getData("text/plain") || draggedKey;
+    if (key && openTabs[key]) {
+      const tabsBarRect = browserTabsBar ? browserTabsBar.getBoundingClientRect() : { bottom: 60 };
+      if (e.clientY > tabsBarRect.bottom + 15) {
+        e.preventDefault();
+        detachTabToWindow(key);
       }
     }
   });
