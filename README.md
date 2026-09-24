@@ -4,71 +4,47 @@ Monorepo centralizado com alternativas open-source e self-hosted ao Kahoot, Wayg
 
 ---
 
-## Estrutura do Projeto
+## 🚀 Inicialização Universal (Recomendado para Professores)
 
-- **apps/quizzle**: Quiz escolar leve, sem login para alunos, PWA (Porta 5000)
-- **apps/darkhold**: Quiz competitivo com batalhas de equipe e streaks (Porta 8181)
-- **apps/doot**: Jogos interativos, desenho e dinamicas Jackbox-style (Porta 4000)
-- **apps/paperclickers**: Sistema offline com cartoes impressos em portugues (A/B/C/D) e Scanner Web ao vivo (Porta 4500)
-- **apps/two-truths**: Duas Verdades e Uma Mentira multiplayer via WebSocket (Porta 8000)
-- **apps/stroop-color**: Desafio de cores de palavras (Efeito Stroop) para agilidade mental (Porta 3000)
+Para eliminar qualquer atrito cognitivo (sem precisar abrir terminal ou digitar portas):
 
-- **packages/ai-quiz-engine**: Motor de geracao de quizzes
-  - generator.py: CLI para geracao de questoes
-  - adapters/: Conversores para Quizzle, Kahoot CSV, PaperClickers Web e Impressao
-  - prompts/: Prompts pedagogicos e analise de erros de falantes de portugues
-  - output/: Arquivos gerados prontos para importar ou imprimir
-- **packages/syllabus-data**: Modelos de ementas Wizard (W2, W4, W6, etc.)
-
-- **docker/**: Orquestracao via Docker Compose
-- **scripts/**: Scripts de inicializacao rapida no Windows (PowerShell / BAT)
+1. Dê dois cliques em **`Wizard Games.bat`** na raiz do projeto.
+2. O script cria automaticamente um atalho na sua **Área de Trabalho (`Wizard Games`)** com o ícone oficial da Wizard.
+3. Seu navegador padrão abrirá imediatamente no **Wizard Games Hub** (`http://localhost:7000`):
+   - **1º Stroop Color Effect** e **2º Two Truths & A Lie** em destaque principal.
+   - Botões de **1 clique** para iniciar os servidores em segundo plano e abrir painéis.
+   - Modal com **QR Code dinâmico** do seu IP Wi-Fi para os alunos escanearem.
+   - Status em tempo real (Online/Offline) de todas as portas.
+   - Botão para liberar o Firewall do Windows com 1 clique.
 
 ---
 
-## Como Iniciar Cada Plataforma
+## Estrutura do Projeto
 
-### 1. Quizzle (Porta 5000)
-```powershell
-.\scripts\start-quizzle.ps1
-```
-Acesse no navegador: http://localhost:5000
+- **apps/hub**: Wizard Games Hub unificado (Porta 7000)
+- **apps/stroop-color**: Desafio de cores de palavras (Efeito Stroop) para agilidade mental (Porta 3000)
+- **apps/two-truths**: Duas Verdades e Uma Mentira multiplayer via WebSocket (Porta 8000)
+- **apps/doot**: Jogos interativos, desenho e dinâmicas Jackbox-style (Porta 4000)
+- **apps/paperclickers**: Sistema offline com cartões impressos em português (A/B/C/D) e Scanner Web ao vivo (Porta 4500)
+- **apps/quizzle**: Quiz escolar leve, sem login para alunos, PWA (Porta 5000)
+- **apps/darkhold**: Quiz competitivo com batalhas de equipe e streaks (Porta 8181)
 
-### 2. Doot Games (Porta 4000)
-```powershell
-.\scripts\start-doot.ps1
-```
-Acesse no navegador: http://localhost:4000
+- **packages/ai-quiz-engine**: Motor de geração de quizzes com IA
+- **packages/syllabus-data**: Modelos de ementas pedagógicas Wizard (W2, W4, W6, etc.)
+- **scripts/**: Scripts de automação PowerShell e inicializadores
 
-### 3. Darkhold (Porta 8181)
-```powershell
-.\scripts\start-darkhold.ps1
-```
-Acesse no navegador: http://localhost:8181
+---
 
-### 4. PaperClickers Web & Cartoes (Porta 4500)
-```powershell
-.\scripts\start-paperclickers.ps1
-```
-Acesse no navegador: http://localhost:4500 (Scanner de camera em tempo real, projetor de perguntas e gerenciador de cartoes).
+## Como Iniciar Apps Individualmente
 
-### 5. Two Truths & A Lie (Porta 8000)
-```powershell
-.\scripts\start-two-truths.ps1
-```
-Ou dê dois cliques em `start-two-truths.bat`.
-Acesse no navegador:
-- Professor (Admin): http://localhost:8000/admin
-- Projetor (Display): http://localhost:8000/display
-- Alunos (Wi-Fi): http://<SEU-IP>:8000/student
+Cada aplicativo agora possui seu próprio arquivo `start.bat` isolado dentro de sua respectiva pasta:
 
-### 6. Stroop Color (Porta 3000)
-```powershell
-.\scripts\start-stroop.ps1
-```
-Ou dê dois cliques em `start-stroop.bat`.
-Acesse no navegador:
-- Painel Admin: http://localhost:3000/
-- Projetor / Tela: http://<SEU-IP>:3000/display
+- **Stroop Color**: `apps/stroop-color/start.bat` (Porta 3000)
+- **Two Truths & A Lie**: `apps/two-truths/start.bat` (Porta 8000)
+- **Doot Games**: `apps/doot/start.bat` (Porta 4000)
+- **PaperClickers**: `apps/paperclickers/start.bat` (Porta 4500)
+- **Quizzle**: `apps/quizzle/start.bat` (Porta 5000)
+- **Darkhold**: `apps/darkhold/start.bat` (Porta 8181)
 
 ---
 
@@ -78,11 +54,11 @@ Acesse no navegador:
 .\scripts\generate-quiz.ps1 -book "W4" -unit "Unit 5" -level "Teens" -target "all"
 ```
 
-Arquivos exportados em packages/ai-quiz-engine/output/:
-- w4_unit_5_quizzle.json: Importacao no Quizzle
-- w4_unit_5_kahoot.csv: Planilha padrao do Kahoot
-- w4_unit_5_paperclickers.html: Folha de prova pronta para impressao com gabarito do professor
-- w4_unit_5_universal.json: JSON universal estruturado (lido diretamente pelo PaperClickers Web)
+Arquivos exportados em `packages/ai-quiz-engine/output/`:
+- `w4_unit_5_quizzle.json`: Importação no Quizzle
+- `w4_unit_5_kahoot.csv`: Planilha padrão do Kahoot
+- `w4_unit_5_paperclickers.html`: Folha de prova pronta para impressão com gabarito do professor
+- `w4_unit_5_universal.json`: JSON universal estruturado (lido diretamente pelo PaperClickers Web)
 
 ---
 
@@ -98,15 +74,8 @@ winget install Python.Python.3.12
 ```
 
 ### 2. Liberar portas no Firewall do Windows (Essencial para redes Wi-Fi):
-Dê dois cliques no arquivo:
-```cmd
-liberar-firewall.bat
-```
-*(Ele solicitará permissão de Administrador e liberará as portas 8000, 3000 e 4000 para que os celulares dos alunos consigam conectar à rede sem bloqueios).*
+Dê dois cliques no arquivo `liberar-firewall.bat` ou clique no botão **"Liberar Firewall"** no Wizard Games Hub.
 
 ### 3. Executar os Jogos:
-Basta dar dois cliques no executável de cada jogo:
-- `start-two-truths.bat` (Two Truths & A Lie)
-- `start-stroop.bat` (Stroop Color Effect)
-- `start-doot.bat` (Doot Games)
+Basta dar dois cliques no atalho **`Wizard Games`** na sua Área de Trabalho ou no arquivo `Wizard Games.bat` na raiz.
 

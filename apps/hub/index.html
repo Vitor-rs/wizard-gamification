@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wizard Games — Central de Gamificação</title>
+
+  <!-- Favicons Oficiais da Wizard -->
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="alternate icon" type="image/png" href="/static/favicon-32x32.png">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+
+  <!-- Fontes Oficiais -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/css/hub.css">
+</head>
+<body>
+
+  <!-- ─── TOP NAVBAR ─────────────────────────────────────────── -->
+  <header class="hub-navbar">
+    <a href="/" class="hub-brand">
+      <img src="/static/img/wizard-logo-white.svg" alt="Wizard by Pearson" onerror="this.src='/static/favicon.svg'">
+      <div class="hub-brand-text">
+        <div class="hub-brand-title">WIZARD <span>GAMES</span></div>
+        <div class="hub-brand-subtitle">Central de Gamificação Pedagógica</div>
+      </div>
+    </a>
+
+    <div class="hub-nav-controls">
+      <div class="wifi-pill" title="Endereço da rede local para os celulares dos alunos">
+        <span class="wifi-dot"></span>
+        <span id="wifiIpText">Wi-Fi: Detectando...</span>
+      </div>
+
+      <button class="btn-nav-action" onclick="triggerFirewall()" title="Libera o acesso dos alunos no Wi-Fi se estiver bloqueado">
+        🛡️ Liberar Firewall
+      </button>
+
+      <button class="btn-nav-action" onclick="fetchStatus()" title="Atualiza o status dos servidores">
+        🔄 Atualizar
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── HERO BANNER ────────────────────────────────────────── -->
+  <section class="hub-hero">
+    <div class="hub-hero-badge">
+      ⚡ Zero Atrito Cognitivo • Clique e Jogue
+    </div>
+    <h1 class="hub-hero-title">
+      Jogos Interativos para sua <span>Sala de Aula</span>
+    </h1>
+    <p class="hub-hero-desc">
+      Escolha o jogo abaixo. Basta clicar em <strong>Abrir Painel</strong> para iniciar automaticamente tudo no seu navegador — sem precisar mexer em terminal, portas ou copiar links.
+    </p>
+  </section>
+
+  <!-- ─── MAIN CONTENT ───────────────────────────────────────── -->
+  <main class="hub-main">
+
+    <!-- SEÇÃO: JOGOS PRINCIPAIS -->
+    <div class="section-label">
+      <h2>Jogos Principais em Destaque</h2>
+      <span class="section-label-badge">Prioridade Pedagógica</span>
+      <div class="section-divider"></div>
+    </div>
+
+    <div class="games-grid-featured">
+
+      <!-- 🥇 1º JOGO: STROOP COLOR EFFECT -->
+      <article class="game-card featured" id="card-stroop">
+        <div>
+          <div class="card-top">
+            <div class="card-order-tag">⭐ 1º Jogo • Agilidade Mental</div>
+            <div class="card-status-badge offline" id="badge-stroop">
+              <span class="dot"></span> Carregando...
+            </div>
+          </div>
+
+          <h3 class="card-title">Stroop Color Effect</h3>
+          <div class="card-subtitle">Desafio de Cores & Palavras (Warm-up)</div>
+          <p class="card-desc">
+            Desafio de alta energia e foco mental. O aluno deve falar a <strong>cor da tinta</strong> da palavra exibida e não o texto lido. Perfeito para aquecer a mente antes de debates e lições orais.
+          </p>
+
+          <div class="card-features">
+            <span class="feature-pill">📺 Modo Projetor Fullscreen</span>
+            <span class="feature-pill">⏱️ Timer Regressivo</span>
+            <span class="feature-pill">🔀 Modos Prática & Desafio</span>
+            <span class="feature-pill">⚡ WebSocket Multi-Tela</span>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-primary" onclick="launchApp('stroop', 'admin')">
+            ▶ Abrir Painel do Professor
+          </button>
+          <div class="btn-row">
+            <button class="btn-secondary" onclick="launchApp('stroop', 'display')">
+              📺 Tela do Projetor
+            </button>
+            <button class="btn-accent" onclick="copyToClipboard(hubState.statuses.stroop ? hubState.statuses.stroop.display_url : 'http://localhost:3000/display')">
+              📋 Copiar Link
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- 🥈 2º JOGO: TWO TRUTHS & A LIE -->
+      <article class="game-card featured" id="card-two-truths">
+        <div>
+          <div class="card-top">
+            <div class="card-order-tag">⭐ 2º Jogo • Sala de Aula</div>
+            <div class="card-status-badge offline" id="badge-two-truths">
+              <span class="dot"></span> Carregando...
+            </div>
+          </div>
+
+          <h3 class="card-title">Two Truths & A Lie</h3>
+          <div class="card-subtitle">Duas Verdades e Uma Mentira (Multiplayer)</div>
+          <p class="card-desc">
+            Dinâmica social interativa. Os alunos entram pelo celular via <strong>QR Code (sem cadastro)</strong>, criam afirmações em inglês e a sala inteira vota pelo celular para adivinhar a mentira de cada colega.
+          </p>
+
+          <div class="card-features">
+            <span class="feature-pill">📱 Entrada via QR Code</span>
+            <span class="feature-pill">🏆 Pódio e Ranking Animado</span>
+            <span class="feature-pill">🕵️ Detector de Mentiras</span>
+            <span class="feature-pill">👥 Multiplayer Real-Time</span>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-primary" onclick="launchApp('two-truths', 'admin')">
+            ▶ Abrir Painel do Professor
+          </button>
+          <div class="btn-row">
+            <button class="btn-secondary" onclick="launchApp('two-truths', 'display')">
+              📺 Tela do Projetor
+            </button>
+            <button class="btn-accent" onclick="showStudentQr('two-truths')">
+              📱 QR Code dos Alunos
+            </button>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- SEÇÃO: DEMAIS JOGOS DA CENTRAL -->
+    <div class="section-label">
+      <h2>Demais Plataformas & Dinâmicas</h2>
+      <div class="section-divider"></div>
+    </div>
+
+    <div class="games-grid-secondary">
+
+      <!-- DOOT GAMES -->
+      <article class="game-card" id="card-doot">
+        <div>
+          <div class="card-top">
+            <div class="card-order-tag">Grupo • Jackbox</div>
+            <div class="card-status-badge offline" id="badge-doot">
+              <span class="dot"></span> Pronto
+            </div>
+          </div>
+          <h3 class="card-title" style="font-size:1.25rem">Doot Games</h3>
+          <div class="card-subtitle">Desenho e Dinâmicas em Equipe</div>
+          <p class="card-desc">
+            Jogos criativos onde os alunos usam o celular para desenhar, adivinhar palavras e competir em equipe de forma leve.
+          </p>
+        </div>
+        <div class="card-actions">
+          <button class="btn-primary" onclick="launchApp('doot', 'admin')">
+            ▶ Iniciar Doot
+          </button>
+        </div>
+      </article>
+
+      <!-- PAPERCLICKERS WEB -->
+      <article class="game-card" id="card-paperclickers">
+        <div>
+          <div class="card-top">
+            <div class="card-order-tag">100% Offline</div>
+            <div class="card-status-badge offline" id="badge-paperclickers">
+              <span class="dot"></span> Pronto
+            </div>
+          </div>
+          <h3 class="card-title" style="font-size:1.25rem">PaperClickers</h3>
+          <div class="card-subtitle">Cartões de Papel & Câmera</div>
+          <p class="card-desc">
+            Avaliação formativa sem que os alunos precisem de celular. A câmera do notebook escaneia os cartões físicos A/B/C/D na hora.
+          </p>
+        </div>
+        <div class="card-actions">
+          <button class="btn-primary" onclick="launchApp('paperclickers', 'admin')">
+            ▶ Abrir Scanner Web
+          </button>
+        </div>
+      </article>
+
+      <!-- QUIZZLE -->
+      <article class="game-card" id="card-quizzle">
+        <div>
+          <div class="card-top">
+            <div class="card-order-tag">Quiz Leve</div>
+            <div class="card-status-badge offline" id="badge-quizzle">
+              <span class="dot"></span> Pronto
+            </div>
+          </div>
+          <h3 class="card-title" style="font-size:1.25rem">Quizzle</h3>
+          <div class="card-subtitle">Alternativa ao Kahoot</div>
+          <p class="card-desc">
+            Quiz rápido de revisão gramatical com contagem regressiva, streaks de acerto e importação direta das questões da IA.
+          </p>
+        </div>
+        <div class="card-actions">
+          <button class="btn-primary" onclick="launchApp('quizzle', 'admin')">
+            ▶ Iniciar Quizzle
+          </button>
+        </div>
+      </article>
+
+      <!-- DARKHOLD -->
+      <article class="game-card" id="card-darkhold">
+        <div>
+          <div class="card-top">
+            <div class="card-order-tag">Competição</div>
+            <div class="card-status-badge offline" id="badge-darkhold">
+              <span class="dot"></span> Pronto
+            </div>
+          </div>
+          <h3 class="card-title" style="font-size:1.25rem">Darkhold</h3>
+          <div class="card-subtitle">Batalhas de Equipe & Vidas</div>
+          <p class="card-desc">
+            Modo de batalha entre bancadas. Cada time defende seus pontos respondendo a rodadas sob pressão de tempo.
+          </p>
+        </div>
+        <div class="card-actions">
+          <button class="btn-primary" onclick="launchApp('darkhold', 'admin')">
+            ▶ Iniciar Darkhold
+          </button>
+        </div>
+      </article>
+
+    </div>
+
+  </main>
+
+  <!-- ─── MODAL QR CODE ALUNOS ───────────────────────────────── -->
+  <div class="hub-modal-overlay" id="qrModal">
+    <div class="hub-modal">
+      <button class="modal-close" onclick="closeStudentQr()">&times;</button>
+      <h3 class="modal-title">📱 Conectar Celulares dos Alunos</h3>
+      <p class="modal-desc">
+        Peça aos alunos para apontarem a câmera do celular para este QR Code para entrarem no jogo imediatamente:
+      </p>
+
+      <div class="qr-box">
+        <img id="qrImg" src="" alt="QR Code dos Alunos">
+      </div>
+
+      <div class="modal-link-box">
+        <input type="text" id="qrLinkInput" readonly>
+        <button class="btn-nav-action" onclick="copyToClipboard(document.getElementById('qrLinkInput').value)">
+          Copiar
+        </button>
+      </div>
+
+      <button class="btn-primary" onclick="closeStudentQr()">
+        Entendido / Fechar
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── TOAST NOTIFICATION ─────────────────────────────────── -->
+  <div class="hub-toast" id="hubToast">
+    <span id="toastMsg">Notificação</span>
+  </div>
+
+  <!-- ─── FOOTER ─────────────────────────────────────────────── -->
+  <footer class="hub-footer">
+    Wizard Gamification Monorepo • Desenvolvido para a metodologia pedagógica Wizard by Pearson • Conectado à Rede Local
+  </footer>
+
+  <script src="/static/js/hub.js"></script>
+</body>
+</html>

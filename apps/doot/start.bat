@@ -1,0 +1,9 @@
+@echo off
+chcp 65001 >nul
+title Doot Games - Wizard Games
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\scripts\start-doot.ps1"
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo Ocorreu um erro ao executar Doot Games.
+    pause
+)
