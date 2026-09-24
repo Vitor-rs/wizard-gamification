@@ -1,7 +1,7 @@
 /**
  * 🎮 WIZARD GAMES HUB — CLIENT JAVASCRIPT
  * Atualiza status em tempo real, gerencia inicialização de jogos,
- * menu lateral flutuante com auto-close de 15s e controle individual de processos/janelas.
+ * barra de abas estilo navegador no header, menu lateral flutuante e janelas.
  */
 
 let hubState = {
@@ -21,6 +21,11 @@ const qrModal = document.getElementById("qrModal");
 const qrImg = document.getElementById("qrImg");
 const qrLinkInput = document.getElementById("qrLinkInput");
 
+// Elementos da Barra de Abas (Browser Tabs)
+const dynamicBrowserTabs = document.getElementById("dynamicBrowserTabs");
+const openWindowsCount = document.getElementById("openWindowsCount");
+const tabHub = document.getElementById("tab-hub");
+
 // Elementos do Sidebar Flutuante
 const floatingMenuBtn = document.getElementById("floatingMenuBtn");
 const sidebarBackdrop = document.getElementById("sidebarBackdrop");
@@ -28,7 +33,10 @@ const floatingSidebar = document.getElementById("floatingSidebar");
 const sidebarRunningGamesContainer = document.getElementById("sidebarRunningGamesContainer");
 const sidebarTimerBar = document.getElementById("sidebarTimerBar");
 
-// ─── TIMER DE AUTO-CLOSE (15s DE INATIVIDADE) ───────────────
+// Estado da Aba Ativa
+let currentActiveTabKey = "hub";
+
+// ─── TIMER DE AUTO-CLOSE (15s DE INATIVIDADE NO SIDEBAR) ─────
 const AUTO_CLOSE_MS = 15000;
 let timerStartTs = 0;
 let timerAnimId = null;
@@ -121,6 +129,126 @@ async function copyToClipboard(text) {
   }
 }
 
+// ─── RENDERIZAR ABAS DE NAVEGADOR NO HEADER ─────────────────
+function renderBrowserTabs(openWindows) {
+  const winEntries = Object.entries(openWindows || {});
+  const totalWindows = 1 + winEntries.length; // 1 (Hub) + N janelas abertas
+
+  // 1. Atualiza contador no canto direito
+  if (openWindowsCount) {
+    openWindowsCount.textContent = `${totalWindows} ${totalWindows === 1 ? 'janela ativa' : 'janelas ativas'}`;
+  }
+
+  // 2. Se a aba ativa não existe mais, volta para a aba do Hub
+  if (currentActiveTabKey !== "hub" && (!openWindows || !openWindows[currentActiveTabKey])) {
+    currentActiveTabKey = "hub";
+  }
+
+  // 3. Atualiza estado ativo da aba do Hub
+  if (tabHub) {
+    tabHub.classList.toggle("active", currentActiveTabKey === "hub");
+  }
+
+  // 4. Constrói HTML das abas dinâmicas
+  if (!dynamicBrowserTabs) return;
+
+  let tabsHtml = "";
+  for (const [key, win] of winEntries) {
+    const appId = win.app_id || "";
+    const route = win.route || "";
+    const appConfig = (hubState.apps && hubState.apps[appId]) || {};
+    const appName = appConfig.name || win.title || appId;
+    const icon = appConfig.icon || (appId === "stroop" ? "🎨" : appId === "two-truths" ? "🎭" : "🎮");
+    const routeLabel = route === "display" ? "Projetor" : route === "admin" ? "Professor" : route;
+    const isActive = (currentActiveTabKey === key);
+
+    tabsHtml += `
+      <div class="browser-tab dynamic-tab ${isActive ? 'active' : ''}"
+           id="tab-${key}"
+           data-key="${key}"
+           onclick="focusWindowFromTab('${key}')"
+           title="Focar janela: ${appName} (${routeLabel})">
+        <span class="tab-favicon">${icon}</span>
+        <span class="tab-route-pill ${route}">${routeLabel}</span>
+        <span class="tab-title">${appName}</span>
+        <button class="tab-close-btn"
+                onclick="closeWindowFromTab(event, '${key}')"
+                title="Fechar janela (✕)"
+                aria-label="Fechar aba">✕</button>
+      </div>
+    `;
+  }
+
+  dynamicBrowserTabs.innerHTML = tabsHtml;
+}
+
+// ─── SELECIONAR ABA DO NAVEGADOR ────────────────────────────
+function selectBrowserTab(key) {
+  currentActiveTabKey = key;
+
+  // Atualiza classes ativas
+  if (tabHub) {
+    tabHub.classList.toggle("active", key === "hub");
+  }
+
+  document.querySelectorAll(".dynamic-tab").forEach(tab => {
+    tab.classList.toggle("active", tab.dataset.key === key);
+  });
+
+  if (key === "hub") {
+    // Traz foco para a janela do Hub
+    fetch("/api/window?key=hub&action=focus").catch(() => {});
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    showToast("🎮 Central de Jogos em foco");
+  }
+}
+
+// ─── FOCAR JANELA A PARTIR DA ABA ───────────────────────────
+async function focusWindowFromTab(key) {
+  selectBrowserTab(key);
+  try {
+    const res = await fetch(`/api/window?key=${encodeURIComponent(key)}&action=focus`);
+    const data = await res.json();
+    const win = hubState.open_windows && hubState.open_windows[key];
+    const title = win ? (win.title || key) : key;
+    showToast(`🔍 Focando janela: ${title}`);
+  } catch (err) {
+    console.error("Erro ao focar janela:", err);
+  }
+}
+
+// ─── FECHAR JANELA A PARTIR DO BOTÃO '✕' DA ABA ─────────────
+async function closeWindowFromTab(event, key) {
+  event.stopPropagation(); // Evita focar a janela ao fechar
+
+  // Animação instantânea de fechamento da aba
+  const tabEl = document.getElementById(`tab-${key}`);
+  if (tabEl) {
+    tabEl.classList.add("closing");
+  }
+
+  try {
+    const win = hubState.open_windows && hubState.open_windows[key];
+    const title = win ? (win.title || key) : "Janela";
+
+    await fetch(`/api/window?key=${encodeURIComponent(key)}&action=close`);
+
+    if (hubState.open_windows) {
+      delete hubState.open_windows[key];
+    }
+
+    showToast(`✕ Janela fechada: ${title}`);
+
+    if (currentActiveTabKey === key) {
+      selectBrowserTab("hub");
+    }
+
+    setTimeout(fetchStatus, 200);
+  } catch (err) {
+    showToast(`❌ Erro ao fechar janela: ${err.message}`);
+  }
+}
+
 // ─── ATUALIZAR STATUS DO HUB E DOS JOGOS ────────────────────
 async function fetchStatus() {
   try {
@@ -153,7 +281,10 @@ async function fetchStatus() {
       }
     }
 
-    // 4. Renderiza seção de jogos ativos no Sidebar
+    // 4. Renderiza Abas de Navegador no Header
+    renderBrowserTabs(data.open_windows || {});
+
+    // 5. Renderiza seção de jogos ativos no Sidebar
     renderRunningGames(data);
 
   } catch (err) {
@@ -192,9 +323,9 @@ function renderRunningGames(data) {
   for (const appId of runningAppIds) {
     const appConfig = (data.apps && data.apps[appId]) || {};
     const status = data.statuses[appId] || {};
-    const title = appConfig.title || appId;
+    const title = appConfig.name || appConfig.title || appId;
     const port = status.port || appConfig.port;
-    const icon = appConfig.icon || "🎮";
+    const icon = appConfig.icon || (appId === "stroop" ? "🎨" : appId === "two-truths" ? "🎭" : "🎮");
 
     const adminKey = `${appId}:admin`;
     const displayKey = `${appId}:display`;
@@ -270,8 +401,13 @@ function renderRunningGames(data) {
 
 // ─── INICIALIZAR OU ABRIR JOGO ──────────────────────────────
 async function launchApp(appId, target = "admin") {
-  const appName = appId === 'stroop' ? 'Stroop Color' : appId === 'two-truths' ? 'Two Truths' : appId;
+  const appConfig = (hubState.apps && hubState.apps[appId]) || {};
+  const appName = appConfig.name || (appId === 'stroop' ? 'Stroop Color' : appId === 'two-truths' ? 'Two Truths' : appId);
   showToast(`⚡ Inicializando ${appName}...`);
+
+  // Define a nova aba como ativa
+  const windowKey = `${appId}:${target}`;
+  currentActiveTabKey = windowKey;
 
   try {
     // 1. Inicia processo em segundo plano (se ainda não ativo)
@@ -312,8 +448,12 @@ async function launchApp(appId, target = "admin") {
 // ─── FINALIZAR UM JOGO ──────────────────────────────────────
 async function stopGame(appId) {
   const appConfig = (hubState.apps && hubState.apps[appId]) || {};
-  const appName = appConfig.title || appId;
+  const appName = appConfig.name || appConfig.title || appId;
   showToast(`🧹 Encerrando ${appName}...`);
+
+  if (currentActiveTabKey.startsWith(appId + ":")) {
+    currentActiveTabKey = "hub";
+  }
 
   try {
     const res = await fetch(`/api/stop?app=${encodeURIComponent(appId)}`);
@@ -328,6 +468,8 @@ async function stopGame(appId) {
 // ─── FINALIZAR TODOS OS JOGOS ───────────────────────────────
 async function stopAllGames() {
   showToast("🧹 Encerrando todos os jogos ativos...");
+  currentActiveTabKey = "hub";
+
   try {
     const res = await fetch("/api/stop_all");
     const data = await res.json();
@@ -345,6 +487,9 @@ async function windowAction(key, action) {
     const data = await res.json();
     if (action === "close") {
       showToast("Janela fechada.");
+      if (currentActiveTabKey === key) {
+        selectBrowserTab("hub");
+      }
     } else if (action === "minimize") {
       showToast("Janela minimizada.");
     } else {
@@ -392,7 +537,7 @@ async function triggerFirewall() {
 // ─── INICIALIZAÇÃO E EVENTOS ────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   fetchStatus();
-  setInterval(fetchStatus, 3500);
+  setInterval(fetchStatus, 3000);
 
   // Fechar modal de QR Code ao clicar fora
   if (qrModal) {

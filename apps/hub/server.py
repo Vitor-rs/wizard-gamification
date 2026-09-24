@@ -273,7 +273,17 @@ def stop_all_apps() -> dict:
 
 
 def window_action(key: str, action: str) -> dict:
-    """Executa ação em janela aberta (focar, minimizar ou fechar)."""
+    """Executa ação em janela aberta (focar, minimizar ou fechar) com suporte a abas de navegador."""
+    # Ação especial para a aba Hub
+    if key == "hub":
+        if action in ("focus", "restore") and sys.platform == "win32":
+            ps_hub = 'powershell.exe -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $hub = Get-Process msedge, chrome -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like \'*Wizard Games*\' -or $_.MainWindowTitle -like \'*Central de Gamificação*\' } | Select-Object -First 1; if ($hub) { $ws.AppActivate($hub.Id) }"'
+            try:
+                subprocess.Popen(ps_hub, shell=True, creationflags=0x08000000)
+            except Exception:
+                pass
+        return {"status": "hub_focused"}
+
     win = OPEN_WINDOWS.get(key)
     if not win:
         return {"error": "Janela não encontrada", "key": key}
@@ -281,32 +291,93 @@ def window_action(key: str, action: str) -> dict:
     url = win.get("url")
     proc = win.get("proc")
     title = win.get("title", "")
+    app_id = win.get("app_id", "")
+    route = win.get("route", "")
+
+    # Mapeamento de palavras-chave para identificar janelas pelo título HTML
+    kw_map = {
+        "stroop": "Stroop",
+        "two-truths": "Two Truths",
+        "paperclickers": "PaperClickers",
+        "quizzle": "Quizzle",
+        "darkhold": "Darkhold"
+    }
+    kw_app = kw_map.get(app_id, app_id)
+    kw_route = "Admin" if route == "admin" else "Display" if route == "display" else ""
 
     if action == "close":
+        # 1. Encerra o processo direto se ativo
         if proc and proc.poll() is None:
             try:
                 proc.terminate()
             except Exception:
                 pass
-        del OPEN_WINDOWS[key]
+
+        # 2. No Windows, fecha a janela do Edge/Chrome pelo título amigavelmente
+        if sys.platform == "win32":
+            conds = []
+            if kw_app:
+                conds.append(f"$_.MainWindowTitle -like '*{kw_app}*'")
+            if kw_route:
+                conds.append(f"$_.MainWindowTitle -like '*{kw_route}*'")
+
+            if conds:
+                cond_str = " -and ".join(conds)
+                ps_close = f'powershell.exe -NoProfile -Command "Get-Process msedge, chrome -ErrorAction SilentlyContinue | Where-Object {{ {cond_str} }} | ForEach-Object {{ $_.CloseMainWindow() }}"'
+                try:
+                    subprocess.Popen(ps_close, shell=True, creationflags=0x08000000)
+                except Exception:
+                    pass
+
+        if key in OPEN_WINDOWS:
+            del OPEN_WINDOWS[key]
         return {"status": "closed", "key": key}
 
     elif action == "minimize":
         win["minimized"] = True
-        if sys.platform == "win32" and title:
-            try:
-                ps_min = f'powershell.exe -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; if ($ws.AppActivate(\'{title}\')) {{ [System.Windows.Forms.SendKeys]::SendWait(\'% {{SPACE}}n\') }}"'
-                subprocess.Popen(ps_min, shell=True, creationflags=0x08000000)
-            except Exception:
-                pass
+        if sys.platform == "win32":
+            conds = []
+            if kw_app:
+                conds.append(f"$_.MainWindowTitle -like '*{kw_app}*'")
+            if kw_route:
+                conds.append(f"$_.MainWindowTitle -like '*{kw_route}*'")
+
+            if conds:
+                cond_str = " -and ".join(conds)
+                ps_min = f'powershell.exe -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $target = Get-Process msedge, chrome -ErrorAction SilentlyContinue | Where-Object {{ {cond_str} }} | Select-Object -First 1; if ($target) {{ $ws.AppActivate($target.Id); Start-Sleep -Milliseconds 100; [System.Windows.Forms.SendKeys]::SendWait(\'% {{SPACE}}n\') }}"'
+                try:
+                    subprocess.Popen(ps_min, shell=True, creationflags=0x08000000)
+                except Exception:
+                    pass
         return {"status": "minimized", "key": key}
 
     elif action in ("focus", "restore"):
         win["minimized"] = False
-        if url:
+        focused = False
+
+        # 1. No Windows, tenta ativar a janela existente pelo título
+        if sys.platform == "win32":
+            conds = []
+            if kw_app:
+                conds.append(f"$_.MainWindowTitle -like '*{kw_app}*'")
+            if kw_route:
+                conds.append(f"$_.MainWindowTitle -like '*{kw_route}*'")
+
+            if conds:
+                cond_str = " -and ".join(conds)
+                ps_focus = f'powershell.exe -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $target = Get-Process msedge, chrome -ErrorAction SilentlyContinue | Where-Object {{ {cond_str} }} | Select-Object -First 1; if ($target) {{ $ws.AppActivate($target.Id); exit 0 }} else {{ exit 1 }}"'
+                try:
+                    res = subprocess.run(ps_focus, shell=True, creationflags=0x08000000)
+                    focused = (res.returncode == 0)
+                except Exception:
+                    focused = False
+
+        # 2. Se a janela não estava mais aberta, reabre em modo Desktop App
+        if not focused and url:
             new_proc = open_in_app_mode(url, window_size=win.get("size", "1200,800"))
             if new_proc:
                 win["proc"] = new_proc
+
         return {"status": "focused", "key": key}
 
     return {"error": "Ação inválida"}
@@ -477,11 +548,7 @@ class HubRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "qr_url": f"http://{local_ip}:{port}{app['qr_path']}" if (port and app.get('qr_path')) else None,
                 }
 
-            # Limpa janelas cujo processo já foi fechado pelo usuário
-            for k in list(OPEN_WINDOWS.keys()):
-                p = OPEN_WINDOWS[k].get("proc")
-                if p and p.poll() is not None:
-                    del OPEN_WINDOWS[k]
+            # OPEN_WINDOWS mantidas ativas até fechamento explícito pelo usuário ou encerramento do jogo
 
             open_win_data = {}
             for k, v in OPEN_WINDOWS.items():

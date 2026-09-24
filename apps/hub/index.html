@@ -121,30 +121,66 @@
     </div>
   </aside>
 
-  <!-- ─── TOP NAVBAR ─────────────────────────────────────────── -->
-  <header class="hub-navbar">
-    <a href="/" class="hub-brand">
-      <img src="/static/img/wizard-logo-white.svg" alt="Wizard by Pearson" onerror="this.src='/static/favicon.svg'">
-      <div class="hub-brand-text">
-        <div class="hub-brand-title">WIZARD <span>GAMES</span></div>
-        <div class="hub-brand-subtitle">Central de Gamificação Pedagógica</div>
+  <!-- ─── HEADER PRINCIPAL COM BARRA DE ABAS ESTILO NAVEGADOR ─── -->
+  <header class="hub-main-header">
+    
+    <!-- BARRA DE ABAS (BROWSER TABS BAR) -->
+    <div class="browser-tabs-bar" id="browserTabsBar">
+      <div class="tabs-left-spacer"></div>
+
+      <!-- Trilho de Abas Rolável -->
+      <div class="browser-tabs-track" id="browserTabsTrack">
+        <!-- Aba Fixa: Central de Jogos (Hub) -->
+        <div class="browser-tab tab-hub active" id="tab-hub" onclick="selectBrowserTab('hub')" title="Central Principal de Jogos (Hub)">
+          <span class="tab-favicon">🎮</span>
+          <span class="tab-title">Central de Jogos</span>
+          <span class="tab-badge-home">HUB</span>
+        </div>
+
+        <!-- Abas Dinâmicas de Janelas Abertas (Injetadas via JS) -->
+        <div class="dynamic-browser-tabs" id="dynamicBrowserTabs">
+          <!-- Renderizado dinamicamente via hub.js: Ex: Stroop • Professor [✕] -->
+        </div>
+
+        <!-- Botão Novo '+' (Nova janela / abrir jogo) -->
+        <button class="tab-add-btn" onclick="openSidebar()" title="Abrir menu lateral e gerenciar jogos" aria-label="Abrir novo jogo">
+          <span>+</span>
+        </button>
       </div>
-    </a>
 
-    <div class="hub-nav-controls">
-      <div class="wifi-pill" title="Endereço da rede local para os celulares dos alunos">
-        <span class="wifi-dot"></span>
-        <span id="wifiIpText">Wi-Fi: Detectando...</span>
+      <!-- Status de janelas no canto direito da barra de abas -->
+      <div class="tabs-status-pill" id="tabsStatusPill" title="Total de janelas ativas">
+        <span class="pulse-dot-cyan"></span>
+        <span id="openWindowsCount">1 janela ativa</span>
       </div>
-
-      <button class="btn-nav-action" onclick="triggerFirewall()" title="Libera o acesso dos alunos no Wi-Fi se estiver bloqueado">
-        🛡️ Liberar Firewall
-      </button>
-
-      <button class="btn-nav-action" onclick="fetchStatus()" title="Atualiza o status dos servidores">
-        🔄 Atualizar
-      </button>
     </div>
+
+    <!-- NAVBAR PRINCIPAL (BRAND, WI-FI E AÇÕES) -->
+    <div class="hub-navbar">
+      <a href="/" class="hub-brand">
+        <img src="/static/img/wizard-logo-white.svg" alt="Wizard by Pearson" onerror="this.src='/static/favicon.svg'">
+        <div class="hub-brand-text">
+          <div class="hub-brand-title">WIZARD <span>GAMES</span></div>
+          <div class="hub-brand-subtitle">Central de Gamificação Pedagógica</div>
+        </div>
+      </a>
+
+      <div class="hub-nav-controls">
+        <div class="wifi-pill" title="Endereço da rede local para os celulares dos alunos">
+          <span class="wifi-dot"></span>
+          <span id="wifiIpText">Wi-Fi: Detectando...</span>
+        </div>
+
+        <button class="btn-nav-action" onclick="triggerFirewall()" title="Libera o acesso dos alunos no Wi-Fi se estiver bloqueado">
+          🛡️ Liberar Firewall
+        </button>
+
+        <button class="btn-nav-action" onclick="fetchStatus()" title="Atualiza o status dos servidores">
+          🔄 Atualizar
+        </button>
+      </div>
+    </div>
+
   </header>
 
   <!-- ─── HERO BANNER ────────────────────────────────────────── -->
