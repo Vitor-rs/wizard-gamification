@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wizard PaperClickers - Scanner & Apresentador</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/svg+xml" href="assets/wizard_simbolo.svg">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand-area">
+      <img src="assets/wizard_logo.svg" alt="Wizard by Pearson" onerror="this.src='assets/wizard_simbolo.svg';">
+      <div class="brand-title">
+        PaperClickers
+        <span class="badge-tag">Zero-Tech</span>
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-btn active" id="tab-quiz">
+        🎯 Quiz & Scanner
+      </button>
+      <button class="nav-btn" id="tab-cards">
+        🖨️ Cartões & PDFs
+      </button>
+      <button class="nav-btn" id="tab-guide">
+        📖 Como Usar
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main>
+
+    <!-- PANE 1: Quiz & Scanner -->
+    <section id="pane-quiz" class="tab-pane active">
+      
+      <!-- Teacher Action Bar -->
+      <div class="control-bar">
+        <div class="control-group">
+          <label for="quiz-select" style="font-weight: 600; font-size: 0.9rem;">Quiz:</label>
+          <select id="quiz-select" class="select-styled">
+            <option value="">Carregando quizzes...</option>
+          </select>
+
+          <label for="upload-json-input" class="btn btn-outline" style="cursor: pointer;">
+            📂 Carregar JSON
+          </label>
+          <input type="file" id="upload-json-input" accept=".json" style="display: none;">
+        </div>
+
+        <div class="control-group">
+          <button id="btn-prev" class="btn btn-outline" title="Questão Anterior (Seta Esquerda)">◀ Anterior</button>
+          <button id="btn-next" class="btn btn-outline" title="Próxima Questão (Seta Direita)">Próxima ▶</button>
+          <button id="btn-reveal" class="btn btn-primary" title="Atalho: Barra de Espaço">
+            👁️ Revelar Resposta <span style="font-size: 0.75rem; opacity: 0.7;">[Espaço]</span>
+          </button>
+          <button id="btn-reset" class="btn btn-outline" title="Limpar respostas coletadas (R)">🔄 Limpar</button>
+          <button id="btn-projector" class="btn btn-secondary" title="Modo Projetor para a Turma (F)">🖥️ Projetor</button>
+        </div>
+      </div>
+
+      <!-- Workspace: Split Question & Live Scanner -->
+      <div class="workspace-grid">
+        
+        <!-- Left: Question Projection -->
+        <div class="question-card">
+          <div class="question-header">
+            <span id="question-meta" class="question-meta">Wizard • Carregando...</span>
+            <span style="font-size: 0.8rem; background: #EEF2F6; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 600;">
+              Projeção para a Turma
+            </span>
+          </div>
+
+          <div class="question-body">
+            <div id="question-text" class="question-text">
+              Selecione um quiz ou gere novas questões pelo AI Quiz Engine.
+            </div>
+
+            <div id="options-container" class="options-grid">
+              <!-- Options A, B, C, D will be inserted here -->
+            </div>
+
+            <!-- Pedagogical Feedback Card -->
+            <div id="feedback-card" class="teacher-feedback-card">
+              <div class="feedback-title">
+                💡 Explicação Pedagógica da Wizard
+              </div>
+              <div id="feedback-text" class="feedback-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Camera Scanner & Real-time Live Stats -->
+        <div class="scanner-card">
+          <div class="scanner-header">
+            <div style="font-weight: 700; color: var(--wizard-navy); font-size: 1.05rem;">
+              📷 Leitor da Sala de Aula
+            </div>
+            <button id="btn-camera-toggle" class="btn btn-secondary">
+              📷 Ligar Câmera <span style="font-size: 0.75rem; opacity: 0.7;">[C]</span>
+            </button>
+          </div>
+
+          <!-- Video & Canvas Display -->
+          <div class="camera-stage">
+            <canvas id="scanner-canvas" width="640" height="480"></canvas>
+            
+            <div id="camera-badge" class="camera-badge">
+              <div id="camera-dot" class="camera-dot"></div> Câmera Pausada
+            </div>
+
+            <div id="camera-placeholder" class="camera-placeholder">
+              <div style="font-size: 3rem;">📸</div>
+              <div style="font-weight: 700; font-size: 1.1rem;">Câmera Desconectada</div>
+              <p style="font-size: 0.85rem; color: #94A3B8; max-width: 280px;">
+                Clique em "Ligar Câmera" para apontar para a sala e ler os cartões dos alunos em tempo real.
+              </p>
+            </div>
+          </div>
+
+          <!-- Real-Time Stats & Bar Chart -->
+          <div class="stats-panel">
+            <div class="stats-summary">
+              <span style="font-weight: 600; font-size: 0.95rem; color: var(--text-muted);">Respostas Coletadas:</span>
+              <span id="answers-count" class="answers-counter">0 respostas</span>
+            </div>
+
+            <!-- Distribution Bars -->
+            <div class="chart-bars">
+              <div class="bar-col">
+                <span id="bar-count-a" class="bar-count">0</span>
+                <div id="bar-fill-a" class="bar-fill bar-a" style="height: 4%;"></div>
+                <span class="bar-label" style="color: var(--opt-a);">[A]</span>
+              </div>
+              <div class="bar-col">
+                <span id="bar-count-b" class="bar-count">0</span>
+                <div id="bar-fill-b" class="bar-fill bar-b" style="height: 4%;"></div>
+                <span class="bar-label" style="color: var(--opt-b);">[B]</span>
+              </div>
+              <div class="bar-col">
+                <span id="bar-count-c" class="bar-count">0</span>
+                <div id="bar-fill-c" class="bar-fill bar-c" style="height: 4%;"></div>
+                <span class="bar-label" style="color: var(--opt-c);">[C]</span>
+              </div>
+              <div class="bar-col">
+                <span id="bar-count-d" class="bar-count">0</span>
+                <div id="bar-fill-d" class="bar-fill bar-d" style="height: 4%;"></div>
+                <span class="bar-label" style="color: var(--opt-d);">[D]</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roster of detected student cards -->
+          <div class="roster-area">
+            <div class="roster-title">Alunos que responderam:</div>
+            <div id="roster-chips" class="roster-chips">
+              <span style="font-size: 0.85rem; color: #94A3B8; font-style: italic;">
+                Nenhum cartão detectado nesta questão ainda.
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PANE 2: Printable Cards & TopCodes -->
+    <section id="pane-cards" class="tab-pane">
+      <div style="margin-bottom: 20px;">
+        <h2 style="color: var(--wizard-navy); margin-bottom: 6px;">Cartões Imprimíveis (TopCodes em Português)</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          Cada aluno recebe um cartão com seu número. Os cartões contêm as alternativas A, B, C e D em cada lado.
+          Imprima uma única vez e use durante todo o ano letivo!
+        </p>
+      </div>
+
+      <div id="cards-list" class="cards-grid">
+        <!-- PDF cards populated dynamically from /api/topcodes -->
+      </div>
+    </section>
+
+    <!-- PANE 3: Instructions & Pedagogy -->
+    <section id="pane-guide" class="tab-pane">
+      <div class="question-card" style="padding: 32px;">
+        <h2 style="color: var(--wizard-navy); margin-bottom: 16px;">Como Funciona o PaperClickers na Wizard</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 20px;">
+          
+          <div style="background: #F8FAFC; padding: 20px; border-radius: 12px; border-left: 4px solid var(--wizard-red);">
+            <h3 style="color: var(--wizard-red); font-size: 1.1rem; margin-bottom: 8px;">1. Imprima os Cartões</h3>
+            <p style="font-size: 0.9rem; color: #475569; line-height: 1.5;">
+              Acesse a aba <strong>Cartões & PDFs</strong> e imprima o pacote em folha A4 (recomendamos 2 por página em papel sulfite 90g ou cartolina). Cada aluno terá seu cartão com número fixo (Aluno 1, Aluno 2, etc.).
+            </p>
+          </div>
+
+          <div style="background: #F8FAFC; padding: 20px; border-radius: 12px; border-left: 4px solid var(--wizard-blue);">
+            <h3 style="color: var(--wizard-blue); font-size: 1.1rem; margin-bottom: 8px;">2. Projete a Questão</h3>
+            <p style="font-size: 0.9rem; color: #475569; line-height: 1.5;">
+              Conecte o notebook ao projetor ou TV da sala. Use o modo <strong>🖥️ Projetor (Atalho F)</strong> para exibir a questão com fonte grande e nítida para todos os alunos lerem.
+            </p>
+          </div>
+
+          <div style="background: #F8FAFC; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
+            <h3 style="color: #10B981; font-size: 1.1rem; margin-bottom: 8px;">3. Levante o Cartão</h3>
+            <p style="font-size: 0.9rem; color: #475569; line-height: 1.5;">
+              Para responder, o aluno levanta o cartão com a <strong>letra escolhida (A, B, C ou D) virada para CIMA (teto)</strong>. A orientação do círculo identifica a opção escolhida.
+            </p>
+          </div>
+
+          <div style="background: #F8FAFC; padding: 20px; border-radius: 12px; border-left: 4px solid #F59E0B;">
+            <h3 style="color: #F59E0B; font-size: 1.1rem; margin-bottom: 8px;">4. Leitura Instantânea</h3>
+            <p style="font-size: 0.9rem; color: #475569; line-height: 1.5;">
+              Com a webcam do notebook ou câmera do celular, aponte para a turma. O sistema detecta todos os cartões simultaneamente em frações de segundo, sem que os colegas vejam a resposta uns dos outros!
+            </p>
+          </div>
+
+        </div>
+
+        <div style="margin-top: 32px; padding: 20px; background: #EEF2F6; border-radius: 12px;">
+          <h4 style="color: var(--wizard-navy); margin-bottom: 8px;">⌨️ Atalhos de Teclado para o Professor:</h4>
+          <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.9rem; color: #334155;">
+            <div><kbd style="background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #CBD5E1;">Espaço</kbd> : Revelar / Ocultar Resposta</div>
+            <div><kbd style="background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #CBD5E1;">▶ Seta Dir</kbd> : Próxima Questão</div>
+            <div><kbd style="background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #CBD5E1;">◀ Seta Esq</kbd> : Questão Anterior</div>
+            <div><kbd style="background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #CBD5E1;">C</kbd> : Ligar / Pausar Câmera</div>
+            <div><kbd style="background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #CBD5E1;">R</kbd> : Resetar Respostas</div>
+            <div><kbd style="background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #CBD5E1;">F</kbd> : Modo Projetor Fullscreen</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Button to exit projector mode if in fullscreen -->
+  <button id="btn-exit-projector" class="btn btn-primary exit-fullscreen-btn">
+    ✕ Sair do Modo Projetor (Esc)
+  </button>
+
+  <!-- TopCodes Vision Library & App Bundle -->
+  <script src="vendor/topcodes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

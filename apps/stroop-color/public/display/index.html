@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stroop Color — Display | Wizard Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --wiz-red:          #E70022;
+      --wiz-red-dark:     #B5001A;
+      --wiz-red-light:    #EB334F;
+      --wiz-navy:         #021167;
+      --wiz-navy-dark:    #05081E;
+      --wiz-navy-deep:    #090D2A;
+      --wiz-navy-surface: #0E1A4E;
+      --wiz-navy-light:   #1A2E7B;
+      --wiz-gold:         #FFBA00;
+      --wiz-cyan:         #00A6ED;
+      --wiz-green:        #00911C;
+      --wiz-white:        #FFFFFF;
+      --wiz-off-white:    #FBF5F2;
+      --wiz-gray-300:     #CCCFE0;
+      --font-display:     'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font-display);
+      background: radial-gradient(circle at 50% 10%, #0E1A4E 0%, var(--wiz-navy-dark) 65%, #020617 100%);
+      color: var(--wiz-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ─── Top Bar Institucional Wizard ──────────────────── */
+    #topBar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(5, 8, 30, 0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid rgba(231, 0, 34, 0.35);
+      z-index: 50;
+    }
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .brand-left img {
+      height: 34px;
+      width: auto;
+      display: block;
+    }
+    .brand-tag {
+      background: var(--wiz-red);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    /* Botão Tela Cheia */
+    #btnFullscreen {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 800;
+      font-style: italic;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #btnFullscreen:hover {
+      background: var(--wiz-red);
+      border-color: var(--wiz-red);
+      box-shadow: 0 0 15px rgba(231, 0, 34, 0.5);
+    }
+
+    /* ─── Timer Flutuante ───────────────────────────────── */
+    #displayTimer {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(5, 8, 30, 0.92);
+      border: 2px solid var(--wiz-red);
+      padding: 6px 26px;
+      border-radius: 9999px;
+      font-size: 1.6rem;
+      font-weight: 900;
+      font-style: italic;
+      color: #fff;
+      letter-spacing: 2px;
+      box-shadow: 0 4px 25px rgba(231, 0, 34, 0.45);
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-variant-numeric: tabular-nums;
+      transition: all 0.2s ease;
+    }
+    #displayTimer.hidden { display: none; }
+    #displayTimer.urgent {
+      border-color: #FF2A5F;
+      background: rgba(255, 42, 95, 0.25);
+      animation: pulse-urgent 0.4s infinite alternate;
+    }
+    @keyframes pulse-urgent {
+      from { transform: translateX(-50%) scale(1.0); }
+      to { transform: translateX(-50%) scale(1.12); }
+    }
+
+    /* ─── Tela de Espera (#screenWait) ──────────────────── */
+    #screenWait {
+      text-align: center;
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 40%, #0E1A4E 0%, var(--wiz-navy-dark) 65%, #020617 100%);
+      z-index: 20;
+      transition: opacity 0.5s ease;
+      padding: 20px;
+    }
+    #screenWait.hidden { opacity: 0; pointer-events: none; }
+    .wait-logo {
+      height: 64px;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 6px 20px rgba(2, 17, 103, 0.6));
+    }
+    #waitTitle {
+      font-size: clamp(2.8rem, 6.5vw, 5.2rem);
+      font-weight: 900;
+      font-style: italic;
+      color: var(--wiz-red);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      text-shadow: 0 4px 30px rgba(231, 0, 34, 0.5);
+    }
+    .wait-subtitle {
+      color: var(--wiz-gray-300);
+      margin-top: 14px;
+      font-size: clamp(1rem, 2vw, 1.4rem);
+      letter-spacing: 1px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    /* Pontos pulsantes Wizard */
+    .dots { display: flex; gap: 16px; margin-top: 32px; justify-content: center; }
+    .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--wiz-navy-surface);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%, 100% { background: var(--wiz-navy-surface); transform: scale(1); box-shadow: none; }
+      50%      { background: var(--wiz-red); transform: scale(1.4); box-shadow: 0 0 16px rgba(231, 0, 34, 0.8); }
+    }
+
+    /* ─── Tela do Jogo (#screenGame) ────────────────────── */
+    #screenGame {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 40px 60px;
+    }
+    #modeLabel {
+      font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 24px;
+      font-weight: 900;
+      font-style: italic;
+      padding: 8px 24px;
+      border-radius: 9999px;
+      transition: all 0.3s;
+    }
+    #modeLabel.practice {
+      color: var(--wiz-cyan);
+      background: rgba(0, 166, 237, 0.12);
+      border: 1px solid rgba(0, 166, 237, 0.3);
+    }
+    #modeLabel.challenge {
+      color: var(--wiz-gold);
+      background: rgba(255, 186, 0, 0.15);
+      border: 1px solid rgba(255, 186, 0, 0.4);
+      text-shadow: 0 0 15px rgba(255, 186, 0, 0.4);
+    }
+
+    #wordList {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .word {
+      font-size: clamp(2.4rem, 5.2vw, 4.2rem);
+      font-weight: 900;
+      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      text-align: center;
+      transition: color 0.35s, opacity 0.35s;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+    }
+
+    /* ─── Tela Oculta (#screenHide) ─────────────────────── */
+    #screenHide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 50%, #0E1A4E 0%, var(--wiz-navy-dark) 70%, #020617 100%);
+      z-index: 10;
+    }
+    #hiddenLabel {
+      font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      color: var(--wiz-gray-300);
+      font-weight: 900;
+      font-style: italic;
+    }
+    .hide-dots { display: flex; gap: 12px; margin-top: 24px; }
+    .hide-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--wiz-navy-surface);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .hide-dot:nth-child(2) { animation-delay: 0.3s; }
+    .hide-dot:nth-child(3) { animation-delay: 0.6s; }
+    .hide-dot:nth-child(4) { animation-delay: 0.9s; }
+    .hide-dot:nth-child(5) { animation-delay: 1.2s; }
+
+    /* ─── Laser Timer Bar no Fundo ──────────────────────── */
+    #timerOverlay {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background: var(--wiz-red);
+      box-shadow: 0 0 20px rgba(231, 0, 34, 0.7);
+      transform-origin: left;
+      transition: transform 0.12s linear, background 0.3s;
+      z-index: 30;
+    }
+    @keyframes shake {
+      0%, 100% { transform: scaleX(var(--sx)) translateX(0); }
+      25%      { transform: scaleX(var(--sx)) translateX(-4px); }
+      75%      { transform: scaleX(var(--sx)) translateX(4px); }
+    }
+    #timerOverlay.urgent { animation: shake 0.15s linear infinite; }
+
+    /* Badge de Modo (Inferior Direito) */
+    #modeBadge {
+      position: fixed;
+      bottom: 22px;
+      right: 28px;
+      padding: 6px 18px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      font-style: italic;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: var(--wiz-navy-surface);
+      color: var(--wiz-gray-300);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: background 0.3s, color 0.3s;
+      z-index: 31;
+    }
+    #modeBadge.practice  { background: var(--wiz-cyan); color: #fff; }
+    #modeBadge.challenge { background: var(--wiz-gold); color: #05081E; }
+    #modeBadge.hidden    { background: #334155; color: #94A3B8; }
+  </style>
+  <script type="module" crossorigin src="/assets/display-M-Thg-3-.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+</head>
+<body>
+
+  <!-- Top Bar Institucional Wizard -->
+  <header id="topBar">
+    <div class="brand-left">
+      <img src="/assets/wizard-logo-white-CxYmdtsM.svg" alt="Wizard by Pearson">
+      <span class="brand-tag">STROOP EFFECT</span>
+    </div>
+    <button id="btnFullscreen">⛶ Tela Cheia</button>
+  </header>
+
+  <!-- Timer Flutuante Central -->
+  <div id="displayTimer" class="hidden">⏱️ <span id="displayTimerNum">10.0</span>s</div>
+
+  <!-- Tela de Espera -->
+  <div id="screenWait">
+    <img src="/assets/wizard-logo-white-CxYmdtsM.svg" alt="Wizard by Pearson" class="wait-logo">
+    <div id="waitTitle">STROOP COLOR</div>
+    <p class="wait-subtitle">Aguardando o professor iniciar no painel...</p>
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- Tela do Jogo (Coluna Centralizada) -->
+  <div id="screenGame">
+    <div id="modeLabel" class="practice">Modo Prática (Diga a cor que lê)</div>
+    <div id="wordList"></div>
+  </div>
+
+  <!-- Tela Oculta -->
+  <div id="screenHide">
+    <div id="hiddenLabel">TELA EM PAUSA</div>
+    <div class="hide-dots">
+      <div class="hide-dot"></div><div class="hide-dot"></div>
+      <div class="hide-dot"></div><div class="hide-dot"></div>
+      <div class="hide-dot"></div>
+    </div>
+  </div>
+
+  <!-- Timer Laser Bar (Fundo da Tela) -->
+  <div id="timerOverlay" style="transform:scaleX(0)"></div>
+  <div id="modeBadge">-</div>
+
+</body>
+</html>

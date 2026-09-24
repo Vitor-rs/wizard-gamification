@@ -1,0 +1,413 @@
+import type { ScorePlayer } from '@doot-games/sdk'
+import { describe, expect, it } from 'vitest'
+import { distributionToBars, gameAnswerKeys, scoreGame } from '../runtime/derive'
+import { voteBox } from '../games/votebox'
+import { collectBlock } from './collect/block'
+import { drawBlock } from './draw/block'
+import { guessBlock } from './guess/block'
+import { pollBlock } from './poll/block'
+import { rankBlock } from './rank/block'
+import { type RateScale, formatScore, rateBlock, scaleMin } from './rate/block'
+
+describe('guess block aggregate', () => {
+  it('counts correct guesses only for eligible rounds', () => {
+    const c0 = { ...guessBlock.defaultContent(), options: [{ label: 'a' }, { label: 'b' }], correct: 1 }
+    const c2 = { ...c0, correct: 0 }
+    const players: ScorePlayer[] = [
+      { id: 'a', name: 'Ann', joinedAtIndex: 0 },
+      { id: 'b', name: 'Bo', joinedAtIndex: 2 }, // joined at round 2
+    ]
+    const frag = guessBlock.aggregate?.({
+      rounds: [
+        { index: 0, content: c0 },
+        { index: 2, content: c2 },
+      ],
+      inputsFor: (i) =>
+        i === 0
+          ? new Map([['a', { choice: 1 }], ['b', { choice: 1 }]])
+          : new Map([['a', { choice: 0 }], ['b', { choice: 0 }]]),
+      answerFor: (i) => (i === 0 ? { correct: 1 } : { correct: 0 }),
+      players,
+    })
+    expect(frag?.leaderboard).toEqual([
+      { id: 'a', name: 'Ann', score: 2, detail: '2 / 2' },
+      { id: 'b', name: 'Bo', score: 1, detail: '1 / 1' }, // only eligible for round 2
+    ])
+  })
+
+  it('only a correct answer scores; a wrong or missing answer earns nothing', () => {
+    const c = { ...guessBlock.defaultContent(), options: [{ label: 'a' }, { label: 'b' }], correct: 1 }
+    const players: ScorePlayer[] = [
+      { id: 'a', name: 'Ann', joinedAtIndex: 0 },
+      { id: 'b', name: 'Bo', joinedAtIndex: 0 },
+      { id: 'c', name: 'Cy', joinedAtIndex: 0 },
+    ]
+    const frag = guessBlock.aggregate?.({
+      rounds: [{ index: 0, content: c }],
+      // Ann right, Bo wrong, Cy did not answer.
+      inputsFor: () => new Map([['a', { choice: 1 }], ['b', { choice: 0 }]]),
+      answerFor: () => ({ correct: 1 }),
+      players,
+    })
+    const byName = Object.fromEntries((frag?.leaderboard ?? []).map((e) => [e.name, e.score]))
+    expect(byName.Ann).toBe(1) // correct -> scores
+    expect(byName.Bo).toBe(0) // wrong -> nothing
+    expect(byName.Cy).toBe(0) // did not answer -> nothing
+  })
+})
+
+describe('draw block aggregate', () => {
+  it('counts drawings and strokes, ignoring empty submissions', () => {
+    const content = drawBlock.defaultContent()
+    const frag = drawBlock.aggregate?.({
+      rounds: [{ index: 0, content }],
+      inputsFor: () =>
+        new Map<string, { strokes: Array<{ color: string; size: number; points: number[] }> }>([
+          ['a', { strokes: [{ color: '#000', size: 0.01, points: [0, 0, 1, 1] }] }],
+          ['b', { strokes: [] }], // submitted nothing meaningful
+          ['c', { strokes: [{ color: '#f00', size: 0.01, points: [0, 0] }, { color: '#00f', size: 0.02, points: [0.2, 0.2, 0.8, 0.8] }] }],
+        ]),
+      answerFor: () => undefined,
+      players: [],
+    })
+    const stat = (label: string) => frag?.stats?.find((s) => s.label === label)?.value
+    expect(stat('Drawings made')).toBe(2)
+    expect(stat('Strokes drawn')).toBe(3)
+  })
+})
+
+describe('rate block aggregate (flexible scale)', () => {
+  it('averages by value and labels by tier', () => {
+    const scale: RateScale = {
+      kind: 'levels',
+      levels: [
+        { label: 'D', value: 1 },
+        { label: 'C', value: 2 },
+        { label: 'B', value: 3 },
+        { label: 'A', value: 4 },
+        { label: 'S', value: 5 },
+      ],
+    }
+    const content = {
+      ...rateBlock.defaultContent(),
+      subject: 'Entry',
+      categories: [{ id: 'o', label: 'Overall' }],
+      scale,
+    }
+    const frag = rateBlock.aggregate?.({
+      rounds: [{ index: 0, content }],
+      inputsFor: () => new Map([['a', { ratings: { o: 4 } }], ['b', { ratings: { o: 4 } }]]),
+      answerFor: () => undefined,
+      players: [
+        { id: 'a', name: 'A', joinedAtIndex: 0 },
+        { id: 'b', name: 'B', joinedAtIndex: 0 },
+      ],
+    })
+    expect(frag?.awards?.[0]).toEqual({ label: 'Top rated Overall', subject: 'Entry', value: 'A' })
+  })
+})
+
+describe('rate scale helpers', () => {
+  const tiers: RateScale = {
+    kind: 'levels',
+    levels: [
+      { label: 'D', value: 1 },
+      { label: 'C', value: 2 },
+      { label: 'B', value: 3 },
+      { label: 'A', value: 4 },
+      { label: 'S', value: 5 },
+    ],
+  }
+
+  it('rounds ties up to the higher tier, value-ordered', () => {
+    expect(formatScore(2.5, tiers)).toBe('B') // tie C/B -> higher
+    expect(formatScore(4.5, tiers)).toBe('S') // tie A/S -> higher
+    expect(formatScore(2.2, tiers)).toBe('C')
+    expect(scaleMin(tiers)).toBe(1)
+  })
+
+  it('requires every category before a rating can be submitted', () => {
+    const content = {
+      ...rateBlock.defaultContent(),
+      categories: [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }],
+    }
+    expect(rateBlock.isComplete?.(content, { ratings: {} })).toBe(false)
+    expect(rateBlock.isComplete?.(content, { ratings: { a: 3 } })).toBe(false)
+    expect(rateBlock.isComplete?.(content, { ratings: { a: 3, b: 4 } })).toBe(true)
+    expect(rateBlock.emptyInput(content)).toEqual({ ratings: {} })
+  })
+})
+
+describe('poll block aggregate', () => {
+  it('builds a distribution with no winner', () => {
+    const content = { ...pollBlock.defaultContent(), options: [{ label: 'A' }, { label: 'B' }] }
+    const frag = pollBlock.aggregate?.({
+      rounds: [{ index: 0, content }],
+      inputsFor: () => new Map([['a', { choice: 0 }], ['b', { choice: 0 }], ['c', { choice: 1 }]]),
+      answerFor: () => undefined,
+      players: [],
+    })
+    expect(frag?.leaderboard).toBeUndefined()
+    expect(frag?.distributions?.[0]?.bars).toEqual([
+      { label: 'A', count: 2 },
+      { label: 'B', count: 1 },
+    ])
+  })
+})
+
+describe('rank block aggregate', () => {
+  it('aggregates orders into a consensus ranking', () => {
+    const content = {
+      ...rankBlock.defaultContent(),
+      prompt: 'Rank',
+      items: [
+        { id: 'a', label: 'A' },
+        { id: 'b', label: 'B' },
+        { id: 'c', label: 'C' },
+      ],
+    }
+    const frag = rankBlock.aggregate?.({
+      rounds: [{ index: 0, content }],
+      inputsFor: () =>
+        new Map([
+          ['p1', { order: ['a', 'b', 'c'] }],
+          ['p2', { order: ['a', 'c', 'b'] }], // a clearly first; b/c contested
+        ]),
+      answerFor: () => undefined,
+      players: [],
+    })
+    const bars = frag?.distributions?.[0]?.bars
+    expect(bars?.[0]).toMatchObject({ label: 'A', display: '#1' }) // unanimous first
+    expect(frag?.leaderboard).toBeUndefined() // consensus, no winner
+  })
+
+  it('seeds emptyInput with a per-player SHUFFLE so passive ballots do not crown the authored order', () => {
+    const content = {
+      ...rankBlock.defaultContent(),
+      items: [
+        { id: 'a', label: 'A' },
+        { id: 'b', label: 'B' },
+        { id: 'c', label: 'C' },
+        { id: 'd', label: 'D' },
+      ],
+    }
+    const ids = content.items.map((i) => i.id)
+    // Every seeded ballot is a valid full permutation (so a no-op lock-in counts).
+    for (let i = 0; i < 50; i++) {
+      const seeded = rankBlock.emptyInput(content).order
+      expect([...seeded].sort()).toEqual([...ids].sort())
+      expect(rankBlock.isComplete?.(content, { order: seeded })).toBe(true)
+    }
+    // The seed is shuffled, not the authored order: across many players the first
+    // slot is not always the authored item 'a' (the consensus-drift the seed fixes).
+    const firsts = new Set(Array.from({ length: 50 }, () => rankBlock.emptyInput(content).order[0]))
+    expect(firsts.size).toBeGreaterThan(1)
+  })
+
+  it('publishes the WHOLE order as a podium, winner first, carrying each picture', () => {
+    const content = {
+      ...rankBlock.defaultContent(),
+      prompt: 'Best snack',
+      items: [
+        { id: 'a', label: 'A', image: 'https://cdn.test/a.png' },
+        { id: 'b', label: 'B', image: '' },
+        { id: 'c', label: 'C', image: 'https://cdn.test/c.png' },
+      ],
+    }
+    const frag = rankBlock.aggregate?.({
+      rounds: [{ index: 0, content }],
+      inputsFor: () =>
+        new Map([
+          ['p1', { order: ['c', 'a', 'b'] }],
+          ['p2', { order: ['c', 'b', 'a'] }],
+        ]),
+      answerFor: () => undefined,
+      players: [],
+    })
+    const dist = frag?.distributions?.[0]
+    // The podium layout is what makes the results page lead with the winner.
+    expect(dist?.layout).toBe('podium')
+    // EVERY item is present, in order, not just the winner.
+    expect(dist?.bars.map((b) => b.label)).toEqual(['C', 'A', 'B'])
+    expect(dist?.bars[0]).toMatchObject({ label: 'C', display: '#1', image: 'https://cdn.test/c.png' })
+    // The note is the average PLACE (1-based), not the raw 0-based position.
+    expect(dist?.bars[0]?.note).toBe('avg place 1.0')
+    expect(dist?.bars[1]?.note).toBe('avg place 2.5')
+    // A picture-less runner-up simply has no image key (nothing to render).
+    expect(dist?.bars.find((b) => b.label === 'B')?.image).toBeUndefined()
+  })
+
+  it('still works on a game SAVED BEFORE items had pictures (no `image` key at all)', () => {
+    // Persisted round content is a passthrough record; blocks receive it raw, so the
+    // schema default cannot be relied on to have filled anything in. Every rank path
+    // has to tolerate an item object with no `image` key.
+    const legacy = {
+      prompt: 'Rank',
+      image: '',
+      timer: null,
+      items: [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }],
+    } as unknown as ReturnType<typeof rankBlock.defaultContent>
+    expect(rankBlock.contentSchema.safeParse(legacy).success).toBe(true)
+    const inputs = new Map([['p1', { order: ['b', 'a'] }]])
+    const frag = rankBlock.aggregate?.({
+      rounds: [{ index: 0, content: legacy }],
+      inputsFor: () => inputs,
+      answerFor: () => undefined,
+      players: [],
+    })
+    expect(frag?.distributions?.[0]?.bars.map((b) => b.label)).toEqual(['B', 'A'])
+    expect(frag?.distributions?.[0]?.bars.every((b) => b.image === undefined)).toBe(true)
+    expect(frag?.awards).toBeUndefined() // nothing has a picture, so no card
+    const reveal = rankBlock.revealSummary?.({ content: legacy, inputs, answer: undefined, players: [] })
+    expect(reveal).toEqual({
+      order: [
+        { id: 'b', label: 'B', place: '#1' },
+        { id: 'a', label: 'A', place: '#2' },
+      ],
+      tied: false,
+    })
+    expect(rankBlock.emptyInput(legacy).order).toHaveLength(2)
+  })
+
+  it('shows nothing for a round nobody answered, instead of crowning the authored first item', () => {
+    const content = {
+      ...rankBlock.defaultContent(),
+      prompt: 'Rank',
+      items: [
+        { id: 'a', label: 'A', image: 'https://cdn.test/a.png' },
+        { id: 'b', label: 'B', image: '' },
+      ],
+    }
+    const frag = rankBlock.aggregate?.({
+      rounds: [{ index: 0, content }],
+      inputsFor: () => new Map(), // nobody ranked
+      answerFor: () => undefined,
+      players: [],
+    })
+    // consensus falls back to the AUTHORED order with no ballots, so publishing it
+    // would present the author's typing order as the room's verdict.
+    expect(frag?.distributions).toEqual([])
+    expect(frag?.awards).toBeUndefined()
+  })
+
+  it('shares a place for a dead heat, and crowns nobody', () => {
+    const content = {
+      ...rankBlock.defaultContent(),
+      prompt: 'Rank',
+      items: [
+        { id: 'a', label: 'A', image: 'https://cdn.test/a.png' },
+        { id: 'b', label: 'B', image: 'https://cdn.test/b.png' },
+        { id: 'c', label: 'C', image: '' },
+      ],
+    }
+    // One player puts A first, another puts B first: A and B end up exactly level.
+    const frag = rankBlock.aggregate?.({
+      rounds: [{ index: 0, content }],
+      inputsFor: () =>
+        new Map([
+          ['p1', { order: ['a', 'b', 'c'] }],
+          ['p2', { order: ['b', 'a', 'c'] }],
+        ]),
+      answerFor: () => undefined,
+      players: [],
+    })
+    const bars = frag?.distributions?.[0]?.bars
+    expect(bars?.map((b) => b.place)).toEqual(['#1', '#1', '#3'])
+    // No single winner, so no "#1" card is invented for either of them.
+    expect(frag?.awards).toBeUndefined()
+  })
+
+  it('gives the room\'s #1 its own award card when that item has a picture', () => {
+    const withPic = {
+      ...rankBlock.defaultContent(),
+      prompt: 'Best snack',
+      items: [
+        { id: 'a', label: 'A', image: 'https://cdn.test/a.png' },
+        { id: 'b', label: 'B', image: '' },
+      ],
+    }
+    const inputs = () => new Map([['p1', { order: ['a', 'b'] }]])
+    const frag = rankBlock.aggregate?.({
+      rounds: [{ index: 0, content: withPic }],
+      inputsFor: inputs,
+      answerFor: () => undefined,
+      players: [],
+    })
+    expect(frag?.awards).toEqual([
+      { label: 'Best snack', subject: 'A', value: '#1', image: 'https://cdn.test/a.png' },
+    ])
+
+    // A text-only winner already reads fine on the podium, so it gets no card.
+    const noPic = { ...withPic, items: [{ id: 'a', label: 'A', image: '' }, { id: 'b', label: 'B', image: '' }] }
+    const plain = rankBlock.aggregate?.({
+      rounds: [{ index: 0, content: noPic }],
+      inputsFor: inputs,
+      answerFor: () => undefined,
+      players: [],
+    })
+    expect(plain?.awards).toBeUndefined()
+  })
+})
+
+describe('distributionToBars (results rendering)', () => {
+  it('defaults to vote semantics when a block gives only counts', () => {
+    const bars = distributionToBars({ title: 'Q', bars: [{ label: 'A', count: 2 }, { label: 'B', count: 1 }] })
+    expect(bars[0]).toEqual({ label: 'A', value: 2, max: 3, display: undefined, note: '2 votes' })
+    expect(bars[1]?.note).toBe('1 vote')
+  })
+
+  it('honors block-provided max/display/note (e.g. a ranking chart)', () => {
+    const bars = distributionToBars({
+      title: 'R',
+      bars: [{ label: 'A', count: 3, max: 3, display: '#1', note: 'avg 0.5' }],
+    })
+    expect(bars[0]).toEqual({ label: 'A', value: 3, max: 3, display: '#1', note: 'avg 0.5' })
+  })
+})
+
+describe('scoreGame merges block fragments', () => {
+  it('produces a leaderboard (guess) and awards (rate) for the VoteBox composition', () => {
+    const cfg = voteBox.defaultConfig
+    const players: ScorePlayer[] = [{ id: 'a', name: 'Ann', joinedAtIndex: 0 }]
+    const answerKeys = gameAnswerKeys(voteBox, cfg)
+    const correct0 = (answerKeys[0] as { correct: number }).correct
+    const result = scoreGame(voteBox, cfg, {
+      // Ann answers the guess round correctly, so she actually scores (and wins).
+      inputsFor: (i) => (i === 0 ? new Map([['a', { choice: correct0 }]]) : new Map()),
+      players,
+      answerKeys,
+    })
+    expect(result.leaderboard?.length).toBe(1) // guess block contributed
+    expect(result.headline).toBe('Ann wins')
+    expect(result.stats?.[0]).toEqual({ label: 'Players', value: 1 })
+  })
+
+  it('does not crown a winner when nobody scored', () => {
+    const cfg = voteBox.defaultConfig
+    const players: ScorePlayer[] = [{ id: 'a', name: 'Ann', joinedAtIndex: 0 }]
+    const result = scoreGame(voteBox, cfg, {
+      inputsFor: () => new Map(), // no correct guesses → top score 0
+      players,
+      answerKeys: gameAnswerKeys(voteBox, cfg),
+    })
+    expect(result.headline).not.toContain('wins')
+  })
+})
+
+describe('collect block aggregate', () => {
+  it('counts photos and non-empty text as shares; ignores blanks', () => {
+    const frag = collectBlock.aggregate?.({
+      rounds: [{ index: 0, content: collectBlock.defaultContent() }],
+      inputsFor: () =>
+        new Map([
+          ['a', { media: 'data:image/jpeg;base64,xyz' }],
+          ['b', { text: 'hi' }],
+          ['c', { text: '   ' }], // blank text is not a share
+          ['d', {}], // nothing shared
+        ]),
+      answerFor: () => undefined,
+      players: [],
+    })
+    expect(frag?.stats).toContainEqual({ label: 'Things shared', value: 2 })
+  })
+})

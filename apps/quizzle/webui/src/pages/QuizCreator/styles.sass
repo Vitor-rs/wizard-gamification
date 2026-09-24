@@ -1,0 +1,236 @@
+@use "@/common/styles/colors" as *
+
+.quiz-creator
+  margin: 3rem
+  background-color: transparent
+
+.quiz-header-area
+  display: flex
+  align-items: center
+  gap: 2rem
+
+  img
+    height: 3.5rem
+    margin-right: 0.5rem
+
+.quiz-title-area
+  display: flex
+  gap: 1rem
+  align-items: center
+
+  .quiz-title-input
+    min-width: 20rem
+    max-width: 30rem
+
+.quiz-action-area
+  display: flex
+  gap: 0.75rem
+  align-items: center
+
+  .action-button
+    display: flex
+    align-items: center
+    justify-content: center
+    width: 3rem
+    height: 3rem
+    border-radius: 0.75rem
+    cursor: pointer
+    transition: all 0.2s ease
+    border: 1px solid $border
+    background: $background
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05)
+
+    svg
+      font-size: 1.2rem
+      color: $text
+
+    &:hover
+      transform: translateY(-2px)
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1)
+      
+    &.import
+      border-color: color-mix(in srgb, $green 30%, $border 70%)
+      background: color-mix(in srgb, $green 8%, white 92%)
+      
+      svg
+        color: $green
+        
+      &:hover
+        background: color-mix(in srgb, $green 12%, white 88%)
+        border-color: color-mix(in srgb, $green 50%, $border 50%)
+
+    &.upload
+      border-color: color-mix(in srgb, $primary 30%, $border 70%)
+      background: color-mix(in srgb, $primary 8%, white 92%)
+      
+      svg
+        color: $primary
+        
+      &:hover
+        background: color-mix(in srgb, $primary 12%, white 88%)
+        border-color: color-mix(in srgb, $primary 50%, $border 50%)
+
+    &.practice
+      border-color: color-mix(in srgb, $blue 30%, $border 70%)
+      background: color-mix(in srgb, $blue 8%, white 92%)
+      
+      svg
+        color: $blue
+        
+      &:hover
+        background: color-mix(in srgb, $blue 12%, white 88%)
+        border-color: color-mix(in srgb, $blue 50%, $border 50%)
+
+    &.download
+      border-color: color-mix(in srgb, $orange 30%, $border 70%)
+      background: color-mix(in srgb, $orange 8%, white 92%)
+      
+      svg
+        color: $orange
+        
+      &:hover
+        background: color-mix(in srgb, $orange 12%, white 88%)
+        border-color: color-mix(in srgb, $orange 50%, $border 50%)
+
+    &.clear
+      border-color: color-mix(in srgb, $red 30%, $border 70%)
+      background: color-mix(in srgb, $red 8%, white 92%)
+      
+      svg
+        color: $red
+        
+      &:hover
+        background: color-mix(in srgb, $red 12%, white 88%)
+        border-color: color-mix(in srgb, $red 50%, $border 50%)
+
+    &.settings
+      border-color: color-mix(in srgb, $gray 30%, $border 70%)
+      background: color-mix(in srgb, $gray 8%, white 92%)
+
+      svg
+        color: $gray
+
+      &:hover
+        background: color-mix(in srgb, $gray 12%, white 88%)
+        border-color: color-mix(in srgb, $gray 50%, $border 50%)
+
+      &.active
+        border-color: color-mix(in srgb, $primary 50%, $border 50%)
+        background: color-mix(in srgb, $primary 12%, white 88%)
+
+        svg
+          color: $primary
+
+    &.locked, &.disabled
+      background: color-mix(in srgb, $gray 8%, white 92%)
+      border-color: color-mix(in srgb, $gray 30%, $border 70%)
+      cursor: not-allowed
+      opacity: 0.5
+      
+      svg
+        color: $gray
+        
+      &:hover
+        transform: none
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05)
+        background: color-mix(in srgb, $gray 8%, white 92%)
+        border-color: color-mix(in srgb, $gray 30%, $border 70%)
+
+    &.undo, &.redo
+      svg
+        color: $gray
+
+      &:not(.disabled)
+        border-color: color-mix(in srgb, $blue 30%, $border 70%)
+        background: color-mix(in srgb, $blue 8%, white 92%)
+
+        svg
+          color: $blue
+
+        &:hover
+          background: color-mix(in srgb, $blue 12%, white 88%)
+          border-color: color-mix(in srgb, $blue 50%, $border 50%)
+
+  .action-group
+    display: flex
+    gap: 0.5rem
+    padding: 0.2rem
+    background: color-mix(in srgb, $background 100%, $border 10%)
+    border: 1px solid $border
+    border-radius: 1rem
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05)
+
+    .action-button
+      box-shadow: none
+      border: none
+      background: transparent
+
+.question-area
+  margin-top: 4rem
+  display: flex
+  gap: 2rem
+  width: 100%
+  max-width: 100%
+  overflow: hidden
+
+.question-list
+  height: 40rem
+  overflow-y: scroll
+  flex: 0 0 auto
+  width: fit-content
+  max-width: 100%
+
+.question-list .questions
+  display: flex
+  flex-direction: column
+  gap: 0.5rem
+
+
+@media screen and (max-width: 1300px)
+  .quiz-header-area
+    gap: 0
+
+@media screen and (max-width: 915px)
+  .quiz-title-area
+    flex-direction: column
+    align-items: flex-start
+    gap: 1.5rem
+    
+    .quiz-title-input
+      min-width: auto
+      max-width: none
+      width: 100%
+
+  .quiz-action-area
+    align-self: stretch
+    
+    .action-group
+      flex: 1
+      justify-content: center
+      
+    .action-button
+      width: 2.5rem
+      height: 2.5rem
+      
+      svg
+        font-size: 1rem
+
+  .question-area
+    flex-direction: column
+    gap: 2rem
+    
+  .question-list
+    height: 100%
+    width: 100%
+    max-width: none
+
+@media screen and (max-width: 560px)
+  .quiz-title-area
+    align-items: center
+    
+  .quiz-action-area
+    flex-direction: column
+    gap: 1rem
+    
+    .action-group
+      width: 100%

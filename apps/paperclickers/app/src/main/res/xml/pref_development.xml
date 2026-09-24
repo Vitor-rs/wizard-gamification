@@ -1,0 +1,85 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory 
+        android:title="@string/pref_header_development">
+        
+	    <!--
+	         NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
+	         dismiss it.
+	    -->
+		<CheckBoxPreference
+			android:key="development_enable_validation"
+			android:title="@string/pref_enable_validation_title"
+			android:summary="@string/pref_enable_validation_summary"
+			android:defaultValue="true"/>
+
+		<EditTextPreference
+	        android:defaultValue="@string/pref_default_validation_threshold"
+	        android:inputType="number"
+	        android:key="development_validation_threshold"
+	        android:maxLines="1"
+	        android:selectAllOnFocus="true"
+	        android:singleLine="true"
+	        android:title="@string/pref_title_validation_threshold"
+			android:dependency="development_enable_validation"/>
+	    
+		<CheckBoxPreference
+			android:key="development_show_validation"
+			android:title="@string/pref_show_topcodes_validation_title"
+			android:summary="@string/pref_show_topcodes_validation_summary"
+			android:defaultValue="true"
+			android:dependency="development_enable_validation"/>
+
+		<CheckBoxPreference
+			android:key="development_allow_answers_changing"
+			android:title="@string/pref_allow_answers_changing_title"
+			android:summary="@string/pref_allow_answers_changing_summary"
+			android:defaultValue="false"/>
+
+		<CheckBoxPreference
+			android:key="development_save_last_image"
+			android:title="@string/pref_save_last_image_title"
+			android:summary="@string/pref_save_last_image_summary"
+			android:defaultValue="false"/>
+
+		<CheckBoxPreference
+			android:key="development_use_camera_emulation"
+			android:title="@string/pref_use_camera_emulation_title"
+			android:summary="@string/pref_use_camera_emulation_summary"
+			android:defaultValue="false"/>
+
+		<CheckBoxPreference
+			android:key="development_force_max_emulation_size"
+			android:title="@string/pref_force_max_emulation_size_title"
+			android:summary="@string/pref_force_max_emulation_size_summary"
+			android:defaultValue="true"
+			android:dependency="development_use_camera_emulation"/>
+
+		<CheckBoxPreference
+			android:key="development_use_morpho"
+			android:title="@string/pref_use_morpho_title"
+			android:summary="@string/pref_use_morpho_summary"
+			android:defaultValue="false"/>
+
+		<EditTextPreference
+			android:key="development_morpho_element_size"
+			android:dependency="development_use_morpho"
+			android:defaultValue="@string/pref_default_morpho_element_size"
+			android:inputType="number"
+			android:maxLines="1"
+			android:selectAllOnFocus="true"
+			android:singleLine="true"
+			android:title="@string/pref_title_morpho_element_size" />
+
+		<Preference
+			android:title="@string/pref_title_reset_onboarding"
+			android:key="reset_usage_guide">
+
+			<intent
+				android:action="com.paperclickers.intent.action.RESET_ONBOARDING"
+				android:targetPackage="com.paperclickers"
+				android:targetClass="com.paperclickers.SettingsActivity" />
+		</Preference>
+	</PreferenceCategory>
+
+</PreferenceScreen>

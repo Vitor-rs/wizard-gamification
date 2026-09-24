@@ -1,0 +1,700 @@
+<script setup lang="ts">
+import { flagshipGames, gameCatalog } from '@doot-games/games/catalog'
+import { GameCover } from '@doot-games/ui'
+import { computed, ref } from 'vue'
+
+const { t } = useI18n()
+const code = ref('')
+function join() {
+  const c = code.value.trim().toUpperCase()
+  if (c.length === 4) navigateTo(`/play/${c}`)
+}
+
+interface SavedGameSummary {
+  id: string
+  pluginId: string
+  title: string
+  themeId: string
+  authorName: string | null
+  authorHandle: string | null
+  coverImage: string | null
+  description: string | null
+  featured: boolean
+  createdAt: number
+}
+const { data: pub } = await useFetch<{ games: SavedGameSummary[] }>('/api/games', {
+  default: () => ({ games: [] }),
+})
+const publicGames = computed(() => pub.value?.games ?? [])
+// Rails only appear once there's a real shelf to browse (no thin/empty rows).
+const MIN_RAIL = 5
+const enoughCommunity = computed(() => publicGames.value.length >= MIN_RAIL)
+// Admin-featured games lead the rail, then newest first within each group.
+const fresh = computed(() =>
+  [...publicGames.value]
+    .sort((a, b) => Number(b.featured) - Number(a.featured) || b.createdAt - a.createdAt)
+    .slice(0, 8),
+)
+const typeName = (id: string) => gameCatalog.find((c) => c.id === id)?.name ?? id
+
+// Games From Doot: lead with the marquee flagships in a hand-picked order, then the
+// rest alphabetically for a predictable, scannable rail.
+const FLAGSHIP_LEAD = ['retro-arcade', 'circuit-cypher', 'quiz-or-die', 'quip-clash', 'open-mic']
+const flagshipsSorted = [...flagshipGames].sort((a, b) => {
+  const ai = FLAGSHIP_LEAD.indexOf(a.id)
+  const bi = FLAGSHIP_LEAD.indexOf(b.id)
+  if (ai !== -1 || bi !== -1) return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi)
+  return a.name.localeCompare(b.name)
+})
+
+useDootSeo({
+  description:
+    'Doot runs live party games for any room. Host trivia, drawing, polls, and party games on a screen, everyone joins from their phone. No app, no account to play.',
+})
+</script>
+
+<template>
+  <main>
+    <div class="wrap">
+      <section class="hero">
+        <div class="hero-text">
+          <span class="tag"><i /> {{ t('hero.tag') }}</span>
+          <h1>{{ t('hero.titlePre') }}<span class="hl">{{ t('hero.titleHighlight') }}</span>{{ t('hero.titlePost') }}</h1>
+          <p class="lead">
+            {{ t('hero.lead') }}
+          </p>
+          <div class="hero-cta">
+            <div class="joinbig">
+              <input v-model="code" :placeholder="t('hero.codePlaceholder')" maxlength="4" :aria-label="t('join.roomCode')" @keyup.enter="join" @input="code = code.toUpperCase()" />
+              <button @click="join">{{ t('hero.joinBtn') }}</button>
+            </div>
+            <NuxtLink to="/explore" class="btn btn-primary btn-lg">{{ t('hero.browseBtn') }}</NuxtLink>
+          </div>
+          <div class="hero-foot">
+            <div class="facepile">
+              <span style="background: #ff5a33">K</span><span style="background: #16c8b5">D</span>
+              <span style="background: #5b79ff">S</span><span style="background: #ff73b3">M</span>
+            </div>
+            <span>{{ t('hero.hostedBy') }}</span>
+          </div>
+        </div>
+        <div class="hero-vis" aria-hidden="true">
+          <div class="float-badge fb-1">
+            <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 6" /></svg> Correct! +1
+          </div>
+          <div class="screen">
+            <div class="scr-top"><i /><i /><i /></div>
+            <div class="scr-body">
+              <div class="scr-q">Who is this character?</div>
+              <div class="scr-img" />
+              <div class="scr-opts">
+                <div class="scr-opt"><span class="fill" style="width: 64%" /><b>A</b><span>Sailor</span></div>
+                <div class="scr-opt"><b>B</b><span>Knight</span></div>
+                <div class="scr-opt"><b>C</b><span>Witch</span></div>
+                <div class="scr-opt"><b>D</b><span>Pilot</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="phone">
+            <div class="pscr">
+              <div class="ttl">Tap your answer</div>
+              <div class="opt sel">A. Sailor</div>
+              <div class="opt">B. Knight</div>
+              <div class="opt">C. Witch</div>
+            </div>
+          </div>
+          <div class="float-badge fb-2">
+            <svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.4 7.4H22l-6 4.5 2.3 7.1L12 16.6 5.7 21l2.3-7.1-6-4.5h7.6z" /></svg> 28 voted
+          </div>
+        </div>
+      </section>
+
+      <!-- Games From Doot / Wizard: ready to play -->
+      <section class="section">
+        <div class="section-head">
+          <div><span class="kicker">Ready to play</span><h2>{{ t('home.flagships') }}</h2></div>
+          <NuxtLink class="more" to="/explore">{{ t('home.exploreAll') }}</NuxtLink>
+        </div>
+        <div class="rail">
+          <NuxtLink v-for="g in flagshipsSorted" :key="g.id" :to="`/game/${g.id}`" class="card rail-card">
+            <GameCover :title="g.name" :type="g.id" />
+            <div class="card-body">
+              <div class="card-title">{{ g.name }}</div>
+              <p class="rail-desc">{{ g.description }}</p>
+              <span class="card-cta">Host now &rarr;</span>
+            </div>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- Fresh from creators (right after the flagships; only once there's a real shelf) -->
+      <section v-if="enoughCommunity" class="section">
+        <div class="section-head">
+          <div><span class="kicker">New this week</span><h2>{{ t('home.freshCreators') }}</h2></div>
+          <NuxtLink class="more" to="/explore">{{ t('home.exploreAll') }}</NuxtLink>
+        </div>
+        <div class="rail">
+          <div v-for="g in fresh" :key="g.id" class="card rail-card card-link">
+            <NuxtLink :to="`/g/${g.id}`" class="card-stretch" :aria-label="`${g.title}, view and host`" />
+            <GameCover :title="g.title" :type="g.pluginId" :image="g.coverImage" />
+            <span v-if="g.featured" class="feat-badge">{{ t('home.featured') }}</span>
+            <div class="card-body">
+              <div class="card-title">{{ g.title }}</div>
+              <p v-if="g.description" class="rail-desc">{{ g.description }}</p>
+              <div v-else class="card-meta"><span class="badge type">{{ typeName(g.pluginId) }}</span></div>
+              <NuxtLink v-if="g.authorHandle" :to="`/u/@${g.authorHandle}`" class="card-by card-by-link">by @{{ g.authorHandle }}</NuxtLink>
+              <p v-else-if="g.authorName" class="card-by">by {{ g.authorName }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How Doot works: the three-step flow -->
+      <section class="section how">
+        <div class="section-head"><div><span class="kicker">Three steps</span><h2>How Doot works</h2></div></div>
+        <div class="how-steps">
+          <div class="how-step" style="--accent: var(--c4)">
+            <div class="how-top">
+              <div class="how-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 16 8" /><path d="m13.5 6 4.5 4.5" /><path d="M18.4 3.2l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" fill="currentColor" stroke="none" /></svg>
+              </div>
+              <span class="how-num">1</span>
+            </div>
+            <h4>Pick or make a game</h4>
+            <p>Grab a Game From Doot or build your own. Choose a theme that styles the lobby and the whole game.</p>
+          </div>
+          <div class="how-step" style="--accent: var(--c2)">
+            <div class="how-top">
+              <div class="how-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></svg>
+              </div>
+              <span class="how-num">2</span>
+            </div>
+            <h4>Put it on the big screen</h4>
+            <p>Open it on a TV, a projector, or a shared laptop. A join code and QR appear for the room.</p>
+          </div>
+          <div class="how-step" style="--accent: var(--primary)">
+            <div class="how-top">
+              <div class="how-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5" /><path d="M11 18.5h2" /></svg>
+              </div>
+              <span class="how-num">3</span>
+            </div>
+            <h4>Everyone plays along</h4>
+            <p>The crowd joins from their phones, answers each round, and the results pop on screen.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Build a custom game: the differentiator, with a peek at the editor's rounds -->
+      <section class="section">
+        <div class="section-head">
+          <div><span class="kicker">Make your own</span><h2>Build a custom game</h2></div>
+          <NuxtLink class="more" to="/create">More ways to create &rarr;</NuxtLink>
+        </div>
+        <div class="cbuild card-link">
+          <NuxtLink to="/editor/custom" class="card-stretch" aria-label="Open the custom game builder" />
+          <div class="cbuild-text">
+            <p class="cbuild-lead">
+              A game is a stack of rounds, and you pick the mix. Trivia, polls, drawing, write-and-vote,
+              hot takes, and more, all in one game. Choose a theme, drop in your content, and host it.
+              No account needed to host.
+            </p>
+            <div class="cbuild-actions">
+              <span class="btn btn-primary btn-lg">Open the builder &rarr;</span>
+              <NuxtLink to="/create" class="cbuild-sub">or start from a single round type &rarr;</NuxtLink>
+            </div>
+          </div>
+          <div class="cbuild-shot">
+            <img
+              src="/home-editor.jpg"
+              width="1600"
+              height="1295"
+              loading="lazy"
+              alt="The Doot builder editing a custom game: a rounds rail with poll, guess, hivemind, and survey rounds, the survey round open for editing, and a live phone preview beside it."
+            />
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</template>
+
+<style scoped>
+.hero-text {
+  min-width: 0;
+}
+.joinbig {
+  display: flex;
+  align-items: center;
+  border: var(--bd) solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.joinbig input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  padding: 14px 8px 14px 20px;
+  /* Wide enough that the letter-spaced "ENTER CODE" placeholder is never clipped. */
+  width: 188px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.joinbig button {
+  border: none;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 800;
+  padding: 0 24px;
+  align-self: stretch;
+  cursor: pointer;
+}
+.hero-foot {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+.facepile {
+  display: flex;
+}
+.facepile span {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2.5px solid var(--bg);
+  margin-left: -9px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  color: #fff;
+}
+.facepile span:first-child {
+  margin-left: 0;
+}
+.hero-vis {
+  position: relative;
+  min-height: 380px;
+}
+.screen {
+  position: absolute;
+  inset: 6% 12% 18% 0;
+  background: var(--surface);
+  border: var(--bd) solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transform: rotate(-2deg);
+}
+.scr-top {
+  height: 34px;
+  background: var(--surface-2);
+  border-bottom: var(--bd) solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+}
+.scr-top i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--line-soft);
+}
+.scr-body {
+  padding: 18px 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.scr-q {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 21px;
+  line-height: 1.05;
+}
+.scr-img {
+  height: 84px;
+  border-radius: 12px;
+  border: var(--bd) solid var(--line-soft);
+  background: linear-gradient(135deg, var(--c4), var(--c3));
+  position: relative;
+  overflow: hidden;
+}
+.scr-img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.5) 1.5px, transparent 1.6px);
+  background-size: 13px 13px;
+  opacity: 0.5;
+}
+.scr-opts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.scr-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: var(--bd) solid var(--line-soft);
+  border-radius: 11px;
+  padding: 8px 10px;
+  font-weight: 700;
+  font-size: 13px;
+  position: relative;
+  overflow: hidden;
+}
+.scr-opt b {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  flex: none;
+}
+.scr-opt .fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+}
+.scr-opt span {
+  position: relative;
+}
+.phone {
+  position: absolute;
+  right: -2%;
+  bottom: 0;
+  width: 118px;
+  height: 228px;
+  background: var(--ink);
+  border-radius: 26px;
+  padding: 8px;
+  box-shadow: var(--shadow);
+  transform: rotate(6deg);
+}
+.phone .pscr {
+  width: 100%;
+  height: 100%;
+  background: var(--primary);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  padding: 14px;
+  text-align: center;
+}
+.phone .pscr .ttl {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--primary-ink);
+  font-size: 15px;
+  line-height: 1.05;
+}
+.phone .pscr .opt {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 11px;
+  padding: 9px;
+  font-weight: 800;
+  font-size: 12px;
+  color: #241910;
+}
+.phone .pscr .opt.sel {
+  background: var(--ink);
+  color: #fff;
+}
+.float-badge {
+  position: absolute;
+  background: var(--surface);
+  border: var(--bd) solid var(--line);
+  border-radius: 14px;
+  padding: 8px 12px;
+  box-shadow: var(--shadow);
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  z-index: 2;
+}
+.float-badge .ic {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fb-1 {
+  top: 2%;
+  left: 8%;
+  transform: rotate(-6deg);
+  color: var(--c2);
+}
+.fb-2 {
+  bottom: 6%;
+  left: 2%;
+  transform: rotate(5deg);
+  color: var(--c3);
+}
+.more {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
+}
+.rail {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 6px 2px 14px;
+  scroll-snap-type: x mandatory;
+}
+.rail-card {
+  min-width: 248px;
+  scroll-snap-align: start;
+}
+.feat-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+}
+.card-by {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.rail-desc {
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0 0 12px;
+  min-height: 42px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-cta {
+  display: inline-block;
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 14px;
+}
+/* Build-a-custom-game band: pitch on the left, a real screenshot of the builder on
+   the right (the full editor layout: rounds rail + the open round + phone preview). */
+.cbuild {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 32px;
+  align-items: center;
+  padding: 30px 32px;
+  border-radius: var(--radius-lg);
+  /* Neutral panel; the screenshot inside carries the color. */
+  background: linear-gradient(135deg, var(--surface), var(--surface-2));
+  border: var(--bd) solid var(--line);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.cbuild:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow), var(--glow) color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.cbuild-lead {
+  font-size: 16px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  margin: 0 0 18px;
+  max-width: 56ch;
+}
+.cbuild-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.cbuild-sub {
+  position: relative;
+  z-index: 2;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
+}
+/* Builder screenshot ------------------------------------------------------------- */
+.cbuild-shot {
+  min-width: 0;
+}
+.cbuild-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: var(--bd) solid var(--line);
+  box-shadow: var(--shadow);
+}
+/* On a narrow column the screenshot stacks below the pitch and scales the whole
+   layout down to fit, rather than dropping panes. */
+@media (max-width: 760px) {
+  .cbuild {
+    grid-template-columns: 1fr;
+  }
+}
+/* How Doot works: playful three-step flow */
+.how-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+/* dashed connector threading the gaps between cards */
+.how-steps::before {
+  content: '';
+  position: absolute;
+  top: 54px;
+  left: 9%;
+  right: 9%;
+  border-top: 3px dashed var(--line-soft);
+  z-index: 0;
+}
+.how-step {
+  --accent: var(--primary);
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border: var(--bd) solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 24px 24px 26px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+/* soft accent wash bleeding from the top-right corner */
+.how-step::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 24%, transparent), transparent 70%);
+  pointer-events: none;
+}
+.how-step:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow), var(--glow) color-mix(in srgb, var(--accent) 42%, transparent);
+}
+.how-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.how-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border: var(--bd) solid color-mix(in srgb, var(--accent) 45%, var(--line-soft));
+  box-shadow: var(--shadow-sm);
+  transform: rotate(-6deg);
+  transition: transform 0.15s ease;
+}
+.how-step:hover .how-icon {
+  transform: rotate(0deg) scale(1.06);
+}
+.how-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.how-num {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 58px;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.24;
+}
+.how-step h4 {
+  position: relative;
+  font-size: 21px;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+.how-step p {
+  position: relative;
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin: 0;
+}
+@media (max-width: 980px) {
+  .how-steps {
+    grid-template-columns: 1fr;
+  }
+  .how-steps::before {
+    display: none;
+  }
+}
+@media (max-width: 860px) {
+  .hero-vis {
+    min-height: 320px;
+  }
+}
+/* Phones: let the join box fill the row so "ENTER CODE" isn't clipped, and let
+   the primary CTA go full-width beneath it. */
+@media (max-width: 560px) {
+  .hero-cta {
+    width: 100%;
+  }
+  .joinbig {
+    width: 100%;
+  }
+  .joinbig input {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  .hero-cta .btn-lg {
+    width: 100%;
+  }
+}
+</style>

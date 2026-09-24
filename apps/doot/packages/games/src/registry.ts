@@ -1,0 +1,94 @@
+/**
+ * The first-party plugin registry. Discrete game types lead; VoteBox is the
+ * composite. All are block compositions, no game depends on another.
+ */
+import type { GamePlugin } from '@doot-games/sdk'
+import { backronym } from './games/backronym'
+import { ballpark } from './games/ballpark'
+import { bingo } from './games/bingo'
+import { buzzer } from './games/buzzer'
+import { callIt } from './games/call-it'
+import { categories } from './games/categories'
+import { circuitCypher } from './games/circuit-cypher'
+import { custom } from './games/custom'
+import { doodleChain } from './games/doodle-chain'
+import { draw } from './games/draw'
+import { faker } from './games/faker'
+import { fibFinder } from './games/fib-finder'
+import { guess } from './games/guess'
+import { hivemind } from './games/hivemind'
+import { madLibs } from './games/mad-libs'
+import { mostLikely } from './games/most-likely'
+import { openMic } from './games/open-mic'
+import { pitParty } from './games/pit-party'
+import { poll } from './games/poll'
+import { quipClash } from './games/quip-clash'
+import { quizOrDie } from './games/quiz-or-die'
+import { rank } from './games/rank'
+import { rate } from './games/rate'
+import { retroArcade } from './games/retro-arcade'
+import { overUnder } from './games/over-under'
+import { sketchSpot } from './games/sketch-spot'
+import { spectrum } from './games/spectrum'
+import { splitRoom } from './games/split-room'
+import { storyChain } from './games/story-chain'
+import { survey } from './games/survey'
+import { tierList } from './games/tier-list'
+import { truthOrShare } from './games/truth-or-share'
+import { typeTheAnswer } from './games/type-the-answer'
+import { wager } from './games/wager'
+import { wouldYouRather } from './games/would-you-rather'
+import { voteBox } from './games/votebox'
+import { wavelength } from './games/wavelength'
+import { whatYouDidntKnow } from './games/what-you-didnt-know'
+
+export const builtinPlugins: GamePlugin[] = [
+  guess,
+  rate,
+  poll,
+  rank,
+  draw,
+  buzzer,
+  voteBox,
+  quipClash,
+  madLibs,
+  splitRoom,
+  fibFinder,
+  sketchSpot,
+  circuitCypher,
+  whatYouDidntKnow,
+  backronym,
+  openMic,
+  hivemind,
+  mostLikely,
+  ballpark,
+  faker,
+  truthOrShare,
+  quizOrDie,
+  typeTheAnswer,
+  wouldYouRather,
+  tierList,
+  overUnder,
+  categories,
+  survey,
+  spectrum,
+  wager,
+  storyChain,
+  doodleChain,
+  wavelength,
+  bingo,
+  callIt,
+  retroArcade,
+  pitParty,
+  custom,
+]
+
+const byId = new Map<string, GamePlugin>(builtinPlugins.map((p) => [p.manifest.id, p]))
+
+export function getPlugin(id: string): GamePlugin | undefined {
+  return byId.get(id)
+}
+
+export function listPlugins(): GamePlugin[] {
+  return [...byId.values()]
+}

@@ -1,0 +1,220 @@
+<script setup lang="ts">
+/**
+ * Manage a game's content decks (config.decks): add by pasting CSV/TSV (from a
+ * spreadsheet), preview the parsed columns + rows, and remove. Self-contained:
+ * the editor mounts it with v-model over `config.decks`. Parsing is the pure
+ * `parseSheet`; rounds bind to these decks via <RoundBindings>.
+ */
+import { parseSheet } from '@doot-games/games'
+import type { DeckColumn, DeckUse } from '@doot-games/sdk'
+import { computed, ref } from 'vue'
+
+// `refDecks` carries the columns/rows/name the editor fetched for any LINKED (`{ ref }`)
+// deck, so a linked deck shows its real size + name instead of "0 rows".
+const props = defineProps<{
+  modelValue?: Record<string, DeckUse>
+  refDecks?: Record<string, { columns: DeckColumn[]; rows: unknown[]; name?: string }>
+}>()
+const emit = defineEmits<{ 'update:modelValue': [value: Record<string, DeckUse> | undefined] }>()
+
+const decks = computed(() => props.modelValue ?? {})
+const list = computed(() =>
+  Object.entries(decks.value).map(([id, use]) => {
+    const inline = 'inline' in use
+    const linked = !inline ? props.refDecks?.[id] : undefined
+    return {
+      id,
+      // The linked deck's own name reads better than the config key (e.g. "pool").
+      label: linked?.name || id,
+      inline,
+      cols: inline ? use.inline.columns.length : (linked?.columns.length ?? 0),
+      rows: inline ? use.inline.rows.length : (linked?.rows.length ?? 0),
+      columns: inline ? use.inline.columns : (linked?.columns ?? ([] as DeckColumn[])),
+    }
+  }),
+)
+
+const adding = ref(false)
+const newName = ref('')
+const pasteText = ref('')
+const preview = ref<ReturnType<typeof parseSheet> | null>(null)
+const expanded = ref<string | null>(null)
+
+function doParse() {
+  preview.value = parseSheet(pasteText.value)
+}
+function slugify(s: string): string {
+  return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
+}
+/** A key not already used by another deck (append a number if it collides). */
+function uniqueKey(base: string): string {
+  let key = base || 'deck'
+  let i = 1
+  while (key in decks.value) key = `${base}_${++i}`
+  return key
+}
+const slugName = computed(() => slugify(newName.value))
+
+// ── Link a library deck (a `{ ref }`; resolved to inline at play time) ───────
+interface DeckOption {
+  id: string
+  name: string
+  kind: string
+  rowCount: number
+  columnCount: number
+}
+const linking = ref(false)
+const myDecks = ref<DeckOption[]>([])
+const loadingDecks = ref(false)
+async function openLink() {
+  linking.value = true
+  adding.value = false
+  if (myDecks.value.length) return
+  loadingDecks.value = true
+  try {
+    const res = await $fetch<{ decks: DeckOption[] }>('/api/decks', { query: { scope: 'mine' } })
+    myDecks.value = res.decks ?? []
+  } catch {
+    myDecks.value = []
+  } finally {
+    loadingDecks.value = false
+  }
+}
+function linkDeck(d: DeckOption) {
+  emit('update:modelValue', { ...decks.value, [uniqueKey(slugify(d.name))]: { ref: d.id } })
+  linking.value = false
+}
+const canAdd = computed(
+  () => !!slugName.value && !!preview.value && preview.value.columns.length > 0 && preview.value.rows.length > 0,
+)
+function confirmAdd() {
+  if (!canAdd.value || !preview.value) return
+  emit('update:modelValue', {
+    ...decks.value,
+    [uniqueKey(slugName.value)]: { inline: { columns: preview.value.columns, rows: preview.value.rows } },
+  })
+  reset()
+}
+function reset() {
+  adding.value = false
+  newName.value = ''
+  pasteText.value = ''
+  preview.value = null
+}
+function removeDeck(id: string) {
+  const next = { ...decks.value }
+  delete next[id]
+  emit('update:modelValue', Object.keys(next).length ? next : undefined)
+}
+</script>
+
+<template>
+  <div class="dm">
+    <p v-if="!list.length && !adding" class="dm-empty">
+      No decks yet. A deck is a table of rows (questions, prompts, images…) you paste from a spreadsheet,
+      then pull into rounds with “Pull from a deck”.
+    </p>
+
+    <ul v-if="list.length" class="dm-list">
+      <li v-for="d in list" :key="d.id" class="dm-item">
+        <div class="dm-row">
+          <button type="button" class="dm-name" @click="expanded = expanded === d.id ? null : d.id">
+            <span class="dm-id">{{ d.label }}</span>
+            <span class="dm-meta">{{ d.rows }} row{{ d.rows === 1 ? '' : 's' }} · {{ d.cols }} col{{ d.cols === 1 ? '' : 's' }}{{ d.inline ? '' : ' · linked' }}</span>
+          </button>
+          <button type="button" class="dm-x" aria-label="Remove deck" @click="removeDeck(d.id)">✕</button>
+        </div>
+        <div v-if="expanded === d.id && d.columns.length" class="dm-cols">
+          <span v-for="c in d.columns" :key="c.key" class="dm-col" :title="`${c.label} (${c.type})`">{{ c.key }}<small>{{ c.type === 'image' ? ' ▦' : c.type === 'number' ? ' #' : '' }}</small></span>
+        </div>
+      </li>
+    </ul>
+
+    <div v-if="!adding && !linking" class="dm-buttons">
+      <button type="button" class="btn btn-ghost btn-sm" @click="adding = true; linking = false">+ Paste a deck</button>
+      <button type="button" class="btn btn-ghost btn-sm" @click="openLink">Link a library deck</button>
+    </div>
+
+    <div v-if="linking" class="dm-add">
+      <div class="dm-link-head">
+        <span class="dm-label">Link a deck from your library <small>(stays linked, so edits in <NuxtLink to="/decks" class="dm-a">Decks</NuxtLink> follow)</small></span>
+        <button type="button" class="dm-x" aria-label="Close" @click="linking = false">✕</button>
+      </div>
+      <p v-if="loadingDecks" class="dm-empty">Loading…</p>
+      <p v-else-if="!myDecks.length" class="dm-empty">No saved decks. <NuxtLink to="/decks/new" class="dm-a">Build one in the library</NuxtLink>, then link it here.</p>
+      <ul v-else class="dm-list">
+        <li v-for="d in myDecks" :key="d.id" class="dm-item">
+          <button type="button" class="dm-name" @click="linkDeck(d)">
+            <span class="dm-id">{{ d.name }}</span>
+            <span class="dm-meta">{{ d.kind }} · {{ d.rowCount }} rows · {{ d.columnCount }} cols</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div v-if="adding" class="dm-add">
+      <label class="dm-field">
+        <span class="dm-label">Deck name</span>
+        <input v-model="newName" class="dm-input" placeholder="e.g. capitals" />
+        <small v-if="newName && slugName !== newName.trim()" class="dm-hint">saved as “{{ slugName }}”</small>
+      </label>
+      <label class="dm-field">
+        <span class="dm-label">Paste CSV or a copy from Google Sheets / Excel (first row = headers)</span>
+        <textarea
+          v-model="pasteText"
+          class="dm-textarea"
+          rows="5"
+          placeholder="country, capital, flag&#10;France, Paris, https://…/fr.png&#10;Japan, Tokyo, https://…/jp.png"
+          @input="preview = null"
+        />
+      </label>
+      <div class="dm-actions">
+        <button type="button" class="btn btn-ghost btn-sm" :disabled="!pasteText.trim()" @click="doParse">Preview</button>
+        <button type="button" class="btn btn-primary btn-sm" :disabled="!canAdd" @click="confirmAdd">Add to game</button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="reset">Cancel</button>
+      </div>
+      <div v-if="preview" class="dm-preview">
+        <p v-if="!preview.columns.length" class="dm-err">Couldn’t parse a header + rows. Check the paste.</p>
+        <template v-else>
+          <p class="dm-ok">
+            {{ preview.rows.length }} row{{ preview.rows.length === 1 ? '' : 's' }} ·
+            columns: {{ preview.columns.map((c) => c.key).join(', ') }}
+          </p>
+          <ul v-if="preview.errors.length" class="dm-errs">
+            <li v-for="(e, i) in preview.errors.slice(0, 5)" :key="i">{{ e }}</li>
+          </ul>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.dm { display: flex; flex-direction: column; gap: 10px; }
+.dm-empty { color: var(--ink-soft); font-size: 13px; line-height: 1.5; margin: 0; }
+.dm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dm-item { border: var(--bd) solid var(--line-soft); border-radius: var(--radius); background: var(--surface-2); }
+.dm-row { display: flex; align-items: center; }
+.dm-name { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; background: none; border: none; padding: 8px 12px; cursor: pointer; color: var(--ink); text-align: left; }
+.dm-id { font-weight: 800; }
+.dm-meta { font-size: 12px; color: var(--mute); }
+.dm-x { background: none; border: none; color: var(--mute); cursor: pointer; padding: 8px 12px; font-size: 14px; }
+.dm-cols { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 10px; }
+.dm-col { font-size: 12px; font-weight: 700; background: var(--surface); border: var(--bd) solid var(--line-soft); border-radius: 6px; padding: 2px 7px; }
+.dm-col small { color: var(--mute); }
+.dm-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.dm-add { display: flex; flex-direction: column; gap: 10px; border: var(--bd) dashed var(--line); border-radius: var(--radius); padding: 12px; }
+.dm-link-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.dm-link-head small { color: var(--mute); font-weight: 600; }
+.dm-a { color: var(--primary); font-weight: 700; }
+.dm-field { display: flex; flex-direction: column; gap: 4px; }
+.dm-label { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.dm-input, .dm-textarea { font: inherit; padding: 8px 10px; border-radius: var(--radius); border: var(--bd) solid var(--line-soft); background: var(--surface); color: var(--ink); }
+.dm-textarea { resize: vertical; font-family: var(--font-mono); font-size: 13px; }
+.dm-hint { color: var(--mute); font-size: 12px; }
+.dm-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.dm-preview { font-size: 13px; }
+.dm-ok { color: var(--ink-soft); margin: 0; }
+.dm-err { color: var(--primary); margin: 0; }
+.dm-errs { margin: 6px 0 0; padding-left: 18px; color: var(--mute); font-size: 12px; }
+</style>

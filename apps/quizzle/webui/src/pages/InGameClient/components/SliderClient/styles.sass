@@ -1,0 +1,136 @@
+@use "sass:color"
+@use "@/common/styles/colors" as *
+
+.slider-client
+    display: flex
+    flex-direction: column
+    align-items: center
+    gap: 1.5rem
+    padding: 1rem
+
+.slider-value-badge
+    background: $blue
+    color: white
+    border-radius: 16px
+    padding: 0.8rem 2rem
+    box-shadow: 0 4px 16px rgba(231, 0, 34, 0.3)
+
+    .value-number
+        font-size: 2.5rem
+        font-weight: 800
+        line-height: 1
+
+.slider-control-area
+    display: flex
+    align-items: center
+    gap: 0.75rem
+    width: 100%
+
+.nudge-button
+    width: 48px
+    height: 48px
+    border-radius: 50%
+    border: 2px solid $border
+    background: white
+    color: $text
+    font-size: 1.1rem
+    cursor: pointer
+    display: flex
+    align-items: center
+    justify-content: center
+    transition: all 0.15s ease
+    flex-shrink: 0
+
+    &:hover:not(:disabled)
+        background: $blue
+        color: white
+        border-color: $blue
+        transform: scale(1.05)
+
+    &:active:not(:disabled)
+        transform: scale(0.95)
+
+    &:disabled
+        opacity: 0.3
+        cursor: not-allowed
+
+.slider-track-wrapper
+    flex: 1
+    display: flex
+    flex-direction: column
+    gap: 0.5rem
+
+    .client-slider-input
+        width: 100%
+        -webkit-appearance: none
+        appearance: none
+        height: 12px
+        background: linear-gradient(to right, $blue var(--slider-percent, 50%), $border var(--slider-percent, 50%))
+        border-radius: 6px
+        outline: none
+        cursor: pointer
+
+        &:disabled
+            cursor: not-allowed
+            opacity: 0.6
+
+        &::-webkit-slider-thumb
+            -webkit-appearance: none
+            appearance: none
+            width: 36px
+            height: 36px
+            border-radius: 50%
+            background: $blue
+            cursor: pointer
+            border: 4px solid white
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25)
+            transition: transform 0.15s ease
+
+            &:hover
+                transform: scale(1.15)
+
+        &::-moz-range-thumb
+            width: 36px
+            height: 36px
+            border-radius: 50%
+            background: $blue
+            cursor: pointer
+            border: 4px solid white
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25)
+
+    .slider-ticks
+        display: flex
+        justify-content: space-between
+        font-size: 0.85rem
+        color: $gray
+        font-weight: 600
+
+.submit-slider-answer
+    display: flex
+    align-items: center
+    gap: 0.6rem
+    padding: 1rem 2rem
+    border-radius: 14px
+    border: none
+    background: $blue
+    color: white
+    font-size: 1.1rem
+    font-weight: 700
+    cursor: pointer
+    transition: all 0.2s ease
+    opacity: 0
+    transform: translateY(10px)
+
+    &.submit-shown
+        opacity: 1
+        transform: translateY(0)
+
+    &:hover:not(:disabled)
+        background: color.adjust(#E70022, $lightness: -10%)
+        transform: translateY(-2px)
+        box-shadow: 0 4px 16px rgba(231, 0, 34, 0.4)
+
+    &:disabled
+        opacity: 0.5
+        cursor: not-allowed
+        transform: none

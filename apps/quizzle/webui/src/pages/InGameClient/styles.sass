@@ -1,0 +1,599 @@
+@use "@/common/styles/colors" as *
+
+.ingame-client
+  display: flex
+  flex-direction: column
+  height: 100dvh
+  position: relative
+
+  .question-content-wrapper
+    display: flex
+    flex-direction: column
+    flex: 1
+    min-height: 0
+
+  .connection-status
+    position: fixed
+    top: 1rem
+    right: 1rem
+    background: rgba(0, 0, 0, 0.8)
+    color: white
+    padding: 0.75rem 1rem
+    border-radius: 0.5rem
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    z-index: 1000
+    backdrop-filter: blur(10px)
+    
+    .connection-icon
+      &.reconnecting
+        color: $orange
+        animation: pulse 1.5s infinite
+        
+      &.disconnected
+        color: $red
+        
+    span
+      font-size: 0.875rem
+      font-weight: 500
+
+  .loading-container
+    display: flex
+    justify-content: center
+    align-items: center
+    height: 100%
+
+@keyframes pulse
+  0%, 100%
+    opacity: 1
+  50%
+    opacity: 0.5
+
+.ingame-header
+  text-align: center
+  padding: 1rem
+  border-bottom: 1px solid $border
+  flex-shrink: 0
+  background-color: $background
+  h2
+    margin: 0
+
+  .practice-progress
+    margin-bottom: 1rem
+
+    .progress-bar
+      width: 100%
+      height: 8px
+      background: $border
+      border-radius: 4px
+      overflow: hidden
+      margin-bottom: 0.5rem
+
+      .progress-fill
+        height: 100%
+        background: $primary
+        transition: width 0.3s ease
+        border-radius: 4px
+
+    span
+      font-size: 0.9rem
+      color: $gray
+
+.question-with-image
+  text-align: center
+  padding: 1rem
+  border-bottom: 1px solid $border
+  flex-shrink: 0
+
+  h2
+    margin: 0 0 1rem 0
+
+  .question-image
+    max-width: 100%
+    max-height: 200px
+    border-radius: 0.5rem
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1)
+
+.question-image-container
+  text-align: center
+  padding: 1rem
+  border-bottom: 1px solid $border
+  flex-shrink: 0
+
+  .question-image
+    max-width: 100%
+    max-height: 200px
+    border-radius: 0.5rem
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1)
+
+.ingame-content
+  flex: 1
+  padding: 1rem
+  gap: 2rem
+  position: relative
+  display: flex
+  flex-direction: column
+  justify-content: center
+  min-height: 0
+  h2
+    margin: 0
+
+  &.grid-layout
+    display: grid
+    grid-template-columns: 1fr 1fr
+    grid-template-rows: 1fr 1fr
+    flex: 1
+    padding: 1rem
+    gap: 1rem
+    min-height: 0
+
+  &.true-false-layout
+    display: flex
+    align-items: center
+    justify-content: center
+    padding: 2rem
+
+  &.text-layout
+    display: flex
+    align-items: center
+    justify-content: center
+    padding: 2rem
+
+  &.sequence-layout
+    display: flex
+    align-items: center
+    justify-content: center
+    padding: 2rem
+    position: relative
+
+  .practice-answer-text
+    font-size: 1.1rem
+    font-weight: 600
+    text-align: center
+    color: white
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3)
+    line-height: 1.3
+
+  .practice-answer-image
+    width: 100%
+    height: 100%
+    object-fit: cover
+    border-radius: 0.5rem
+
+  .ingame-answer-selected
+    transform: scale(0.95)
+    opacity: 0.8
+
+  .ingame-answer
+    display: flex
+    justify-content: center
+    align-items: center
+    border-radius: 0.5rem
+    font-size: 1.5rem
+    color: white
+    cursor: pointer
+    padding: 0.5rem
+    min-height: 0
+    overflow: hidden
+    box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.22), 0 4px 0 rgba(0, 0, 0, 0.2)
+    transition: all 0.15s ease-in-out
+
+    &:hover
+      filter: brightness(1.05)
+
+    &:active
+      transform: translateY(2px)
+      box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.22), 0 2px 0 rgba(0, 0, 0, 0.2)
+
+    .ingame-icon
+      transition: font-size 0.2s
+      font-size: 3rem
+    .ingame-icon-selected
+      color: $dark-gray
+      font-size: 4rem
+
+  .submit-container
+    position: absolute
+    left: 0
+    right: 0
+    bottom: 0
+    display: flex
+    justify-content: center
+    pointer-events: none
+    padding-bottom: 1.5rem
+
+  .submit-answers
+    width: 4rem
+    height: 4rem
+    display: flex
+    background: linear-gradient(135deg, color-mix(in srgb, $primary 100%, white 20%), color-mix(in srgb, $primary 100%, black 10%))
+    border: 1px solid rgba(0, 0, 0, 0.15)
+    border-radius: 50%
+    color: $background
+    font-size: 1.5rem
+    justify-content: center
+    align-items: center
+    cursor: pointer
+    transform: translateY(240%)
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 0 1rem rgba(231, 0, 34, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)
+    transition: transform 0.2s
+    pointer-events: auto
+
+    span
+      font-size: 1rem
+      font-weight: 600
+  .submit-shown
+    display: flex
+    z-index: 10
+    transform: translateY(0)
+
+  .ingame-answer:nth-child(1)
+    background: linear-gradient(180deg, color-mix(in srgb, #E21B3C 100%, white 8%), color-mix(in srgb, #E21B3C 100%, black 14%))
+
+  .ingame-answer:nth-child(2)
+    background: linear-gradient(180deg, color-mix(in srgb, #1368CE 100%, white 8%), color-mix(in srgb, #1368CE 100%, black 14%))
+
+  .ingame-answer:nth-child(3)
+    background: linear-gradient(180deg, color-mix(in srgb, #D89E00 100%, white 8%), color-mix(in srgb, #D89E00 100%, black 14%))
+
+  .ingame-answer:nth-child(4)
+    background: linear-gradient(180deg, color-mix(in srgb, #26890C 100%, white 8%), color-mix(in srgb, #26890C 100%, black 14%))
+
+.answers-not-ready-overlay
+  position: fixed
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background: rgba(0, 0, 0, 0.8)
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  z-index: 9999
+  backdrop-filter: blur(6px)
+
+  .countdown-message
+    text-align: center
+    color: white
+    display: flex
+    flex-direction: column
+    align-items: center
+    gap: 2rem
+
+  .countdown-spinner
+    user-select: none
+    border-radius: 10rem
+    display: flex
+    justify-content: center
+    align-items: center
+    position: relative
+
+    .countdown-number
+      z-index: 3
+      color: $background
+      font-size: 3rem
+      font-weight: bold
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3)
+      transition: all 0.3s ease
+
+      &:has-text("✓")
+        color: $green
+        font-size: 2.5rem
+
+    .spinner-background
+      z-index: 2
+      position: absolute
+      width: 5rem
+      height: 5rem
+      border-radius: 1rem
+      background-color: rgba(0, 0, 0, 0.7)
+
+    .countdown-circle
+      z-index: 1
+      width: 5.5rem
+      height: 5.5rem
+      position: absolute
+      border-radius: 1rem
+      transform: rotate(-90deg)
+      background: linear-gradient(135deg, $primary 0%, $blue 50%, $primary 100%)
+      transform-origin: center
+      animation: countdownSpin 2s infinite ease-in-out
+
+@keyframes countdownSpin
+  0%
+    transform: rotate(-90deg)
+    filter: brightness(1)
+  50%
+    transform: rotate(90deg)
+    filter: brightness(1.2)
+  100%
+    transform: rotate(270deg)
+    filter: brightness(1)
+
+.ingame-footer
+  display: flex
+  margin: 1rem
+  justify-content: space-between
+  align-items: center
+  flex-shrink: 0
+
+  h2
+    margin: 0
+
+  .footer-points
+    padding: 0.5rem 1rem
+    border-radius: 0.5rem
+    background-color: $dark-gray
+    color: $border
+
+    h2
+      margin: 0
+      font-variant-numeric: tabular-nums
+
+.ingame-answers
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  flex: 1
+  min-height: 0
+
+  .practice-final-score
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    font-size: 3rem
+    font-weight: 900
+    margin: 1rem 0
+
+    .score
+      color: $green
+
+    .total
+      color: $gray
+
+    .percentage
+      font-size: 1.5rem
+      color: $primary
+      font-weight: 600
+      margin-left: 1rem
+
+  .practice-next-button
+    padding: 1rem 2rem
+    background: linear-gradient(135deg, color-mix(in srgb, $primary 100%, white 20%), color-mix(in srgb, $primary 100%, black 10%))
+    color: white
+    border: 1px solid rgba(0, 0, 0, 0.15)
+    border-radius: 0.75rem
+    font-size: 1.1rem
+    font-weight: 600
+    cursor: pointer
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)
+    transition: all 0.2s ease-in-out
+    margin-top: 1rem
+
+    &:hover
+      filter: brightness(1.1)
+      transform: translateY(-2px)
+      box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15)
+
+.ingame-answers > svg,
+.ingame-answers > .ingame-icon-correct,
+.ingame-answers > .ingame-icon-partial,
+.ingame-answers > .ingame-icon-wrong
+  display: flex
+  justify-content: center
+  align-items: center
+  width: 3rem
+  height: 3rem
+  padding: 2rem
+  border-radius: 50rem
+  color: $background
+  border: 1px solid rgba(0, 0, 0, 0.15)
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)
+
+.ingame-answer
+  display: flex
+  justify-content: center
+  align-items: center
+
+.ingame-icon-correct
+  background: linear-gradient(135deg, color-mix(in srgb, $green 100%, white 20%), color-mix(in srgb, $green 100%, black 10%))
+
+.ingame-icon-partial
+  background: linear-gradient(135deg, color-mix(in srgb, $orange 100%, white 20%), color-mix(in srgb, $orange 100%, black 10%))
+
+.ingame-icon-wrong
+  background: linear-gradient(135deg, color-mix(in srgb, $red 100%, white 20%), color-mix(in srgb, $red 100%, black 10%))
+
+.lds-hourglass
+  color: $primary
+  box-sizing: border-box
+
+  &:after
+    box-sizing: border-box
+    content: " "
+    display: block
+    border-radius: 50%
+    width: 0
+    height: 0
+    margin: 8px
+    filter: drop-shadow(0 0 1rem $primary)
+    border: 32px solid currentColor
+    border-color: currentColor transparent currentColor transparent
+    animation: lds-hourglass 1.5s infinite
+
+  display: inline-block
+  position: relative
+  width: 80px
+  height: 80px
+
+@keyframes lds-hourglass
+  0%
+    transform: rotate(0)
+    animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19)
+
+  50%
+    transform: rotate(900deg)
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1)
+
+  100%
+    transform: rotate(1800deg)
+
+.result-reveal
+  display: flex
+  flex-direction: column
+  align-items: stretch
+  gap: 0.75rem
+  width: 100%
+  max-width: 24rem
+  margin: 0 auto
+  padding: 1rem
+
+  .result-icon-wrapper
+    align-self: center
+    display: flex
+    align-items: center
+    justify-content: center
+    width: 4rem
+    height: 4rem
+    border-radius: 50%
+    color: white
+    margin-bottom: 0.25rem
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.25), inset 0 -2px 4px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.1)
+
+    .result-icon
+      width: 1.75rem
+      height: 1.75rem
+
+    &.result-correct
+      background: linear-gradient(135deg, color-mix(in srgb, $green 100%, white 20%), color-mix(in srgb, $green 100%, black 10%))
+      filter: drop-shadow(0 0 1rem rgba(28, 148, 90, 0.5))
+
+    &.result-partial
+      background: linear-gradient(135deg, color-mix(in srgb, $orange 100%, white 20%), color-mix(in srgb, $orange 100%, black 10%))
+      filter: drop-shadow(0 0 1rem rgba(255, 165, 0, 0.5))
+
+    &.result-wrong
+      background: linear-gradient(135deg, color-mix(in srgb, $red 100%, white 20%), color-mix(in srgb, $red 100%, black 10%))
+      filter: drop-shadow(0 0 1rem rgba(236, 85, 85, 0.5))
+
+  .result-title
+    font-size: 1.5rem
+    font-weight: 800
+    margin: 0
+    text-align: center
+
+  .points-earned
+    font-size: 2.25rem
+    font-weight: 900
+    font-variant-numeric: tabular-nums
+    text-align: center
+    margin-bottom: 0.5rem
+
+    &.points-correct
+      color: $green
+
+    &.points-partial
+      color: $orange
+
+    &.points-wrong
+      color: $red
+
+  .result-card
+    background-color: $background
+    border: 1px solid $border
+    border-radius: 0.75rem
+    padding: 0.9rem 1rem
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04)
+
+  .streak-card
+    display: flex
+    flex-direction: column
+    gap: 0.75rem
+
+    .streak-card-header
+      display: flex
+      align-items: center
+      justify-content: space-between
+      gap: 1rem
+
+    .streak-card-title
+      display: flex
+      align-items: baseline
+      gap: 0.5rem
+
+      .streak-number
+        font-size: 1.25rem
+        font-weight: 800
+
+      .streak-label
+        font-size: 0.95rem
+        font-weight: 500
+
+    .streak-badge
+      display: inline-flex
+      align-items: center
+      gap: 0.4rem
+      background: linear-gradient(135deg, color-mix(in srgb, $orange 100%, white 20%), color-mix(in srgb, $orange 100%, black 10%))
+      color: white
+      font-weight: 700
+      font-size: 0.95rem
+      line-height: 1
+      padding: 0.35rem 0.85rem
+      border-radius: 10rem
+      border: 1px solid rgba(0, 0, 0, 0.15)
+      box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.25), inset 0 -2px 4px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.08)
+
+      svg
+        width: 0.9rem
+        height: 0.9rem
+
+    .streak-bars
+      display: flex
+      gap: 0.3rem
+      width: 100%
+
+      .streak-bar
+        flex: 1
+        height: 0.4rem
+        border-radius: 10rem
+        background-color: #FFD9A3
+        transition: background-color 0.2s
+
+        &.streak-bar-filled
+          background-color: $orange
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.12)
+
+  .rank-card
+    display: flex
+    align-items: center
+    gap: 0.85rem
+
+    .rank-badge
+      display: flex
+      align-items: center
+      justify-content: center
+      width: 2.5rem
+      height: 2.5rem
+      border-radius: 0.6rem
+      background-color: #F1F0F7
+      color: $dark-gray
+      font-weight: 700
+      font-size: 0.95rem
+      flex-shrink: 0
+
+    .rank-info
+      display: flex
+      flex-direction: column
+      gap: 0.1rem
+      min-width: 0
+
+      .rank-main
+        font-size: 1rem
+        font-weight: 700
+
+      .rank-sub
+        font-size: 0.8rem
+        color: $gray

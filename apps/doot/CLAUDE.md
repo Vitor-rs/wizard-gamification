@@ -1,0 +1,82 @@
+# CLAUDE.md
+
+Guidance for Claude Code (and any implementing agent) working in this repository.
+
+## What Doot is
+
+Doot is a self-hostable platform for live, collaborative party games. One host puts a game on a big screen, a crowd joins from their phones via a short code or QR, and everyone plays together in real time over the **CLASP** pub/sub relay. Doot is the shell, the engine, and the plugin system, **the games are plugins.** Target rooms: convention panels, bar trivia, house parties, and classrooms.
+
+**The full spec is `Doot-PRD.md`.** Read it before implementing anything; it is the source of truth. This file is the short version plus the rules that are easy to get wrong. When the two disagree, the PRD wins, and fix this file.
+
+Status: built and deployed (live at https://doot.games). All five packages (`engine`, `sdk`, `themes`, `ui`, `games`) and the `apps/web` Nuxt shell exist and ship; the original `votebox (1).html` prototype is the single-file game this platform generalizes. Phase two (external-plugin sandbox, publishing) and richer scale/polish remain. Keep this file in sync as the code moves.
+
+## Architecture invariants, do not violate these
+
+1. **Two kinds of state, kept strictly apart.**
+   - **Durable** (Postgres via Drizzle): accounts, game definitions, the reusable content-deck library (`/decks`), plugin registry, optional historical stats.
+   - **Ephemeral** (CLASP relay): phase, rounds, roster, inputs, live tallies, ephemeral media with TTL.
+   - **Nothing about an in-progress room is written to the database during play.** The app tier holds no session state, that is what makes it scale horizontally.
+2. **Second-screen, never shared-video.** Phones receive game state directly from the relay. Latency is an architecture decision: never route gameplay through the host's screen share.
+3. **Withhold answers.** The host publishes the game config with `correct` fields stripped, then publishes each round's answer key to `/round/<i>/answer` only at the reveal step. A spectator reading the relay must not be able to see answers early. This is a hard requirement; the engine enforces it so a plugin cannot leak answers.
+4. **Dependency direction is one-way:** games → (engine, sdk, themes, ui); sdk → (engine, themes); ui → (engine, themes); `apps/web` → everything. **The engine never imports a game. The sdk never imports the shell.** No cycles. This keeps platform and games independent.
+5. **Identity is derived, reconnect is free.** A player id is `p_<hash(room + name)>`. Re-entering the same name in the same room reclaims inputs and score from the relay snapshot, no login, no dependence on local storage (the play surface must work where storage is blocked, e.g. embedded frames).
+6. **Untrusted code is sandboxed.** First-party plugins run in-process. External (URL-registered) plugins run in a sandboxed iframe behind a typed postMessage bridge; they never see cookies, DB routes, or the raw relay. Keep that bridge surface small.
+
+## Packages and naming
+
+Monorepo: pnpm workspaces. **Published npm scope is `@doot-games`** (the org). Never use the old `@doot/` scope.
+
+| Path | Package | Role |
+| --- | --- | --- |
+| `packages/engine` | `@doot-games/engine` | CLASP wrapper, room runtime, Vue composables (`useDootRoom`) |
+| `packages/sdk` | `@doot-games/sdk` | the block + composition contract (`defineBlock`/`defineGame`), Zod schemas, round primitives |
+| `packages/ui` | `@doot-games/ui` | shared theme-aware Vue components |
+| `packages/themes` | `@doot-games/themes` | theme token packs + registry |
+| `packages/games` | `@doot-games/games` | the round blocks (guess/answer/wager/rate/poll/rank/tier/draw/quip/vote/fill/split/bars/buzzer/fibvote/drawvote/hivemind/mostlikely/ballpark/faker/accuse/spotlight/cellar/bingo/callit/categories/survey/spectrum/slide/title/collect/photovote, plus the per-player chain/role blocks chainline/doodle/wavelength on the P7 foundation; `tier` is a SOLO block - it owns its whole round and runs an item-by-item show itself, then advances), the generic renderer, scoring knobs, and games as compositions. Authoritative lists: `registry.ts` (games) + `index.ts` (blocks); `catalog.ts` is the server-safe mirror |
+| `apps/web` |, | Nuxt shell: discovery, lobby, host, player, editor, auth, API routes |
+
+**Plugin model, blocks + compositions** (the authoring contract; see `docs/authoring-a-game.md`, with copy-paste examples in `examples/`): a **block** is a standalone round kind that declares a content schema + a Player view + a Host view + an `aggregate` + optional answer-withholding. A **game** is a manifest + an ordered list of `{ block, content }`; the generic `GameHost`/`GamePlayer`/`GameResults` renderer mounts the right block per round and merges results, so most games are ~20 lines and need no components. Single-type games (Guess/Rate/Poll/Rank/Draw); VoteBox = `[guess, rate]`. The **two-phase** flagships compose a make block (quip/fill/faker) with a judge block (vote/split/fibvote/drawvote/accuse): the judge round's content is derived at runtime from the prior round's anonymized inputs (`derive`/`toVoteText`/`buildConfig`). The editor's Add panel inserts these make+judge pairs as one-click "recipes", so they are buildable by hand, not only via markdown. No game imports another. Full-custom games override `components`. **File layout: every game lives in its own folder `packages/games/src/games/<id>/` whose `index.ts` exports the `defineGame(...)` result; the folder name matches `manifest.id` (kebab-case).** A simple composed game is just `index.ts`. A custom-flow game adds `Host.vue`/`Player.vue`, its pure tested rules in `logic.ts`, and any other helpers (e.g. `audio.ts`, `cast.ts`, `show.ts`); when the Host gets large, lift the orchestration into a `use<Game>Show.ts` composable and keep the `.vue` a thin stage (quiz-or-die is the reference). Blocks live in `packages/games/src/blocks/<kind>/` with prefixed views (`GuessHost.vue`). There is no `packages/plugin-template`; copy from `examples/` instead. External/URL-registered plugins are PRD §9 future work, not built.
+
+## Tech decisions (confirm exact versions against the lockfile at build time)
+
+- **TypeScript everywhere, strict mode. No implicit `any`.**
+- **Nuxt (Nuxt 4 line) + Vue 3.** Nitro server routes for auth, DB, presigned uploads, games/plugins API. SSR for public discovery/game pages.
+- **Real-time: `@clasp-to/core`** (core build, not the higher-level SDK, Doot only needs publish/subscribe with persistence + TTL). The prototype pins `4.3.2`. Relay: `wss://relay.clasp.to`.
+- **Database: Drizzle ORM over libSQL/SQLite** today (zero-config local file; `DATABASE_URL` for a libSQL/Turso URL). PostgreSQL is the documented prod follow-up behind the same `useDb()`/repo seam. Schema is created on startup (`apps/web/server/utils/db.ts`); better-auth manages its own tables.
+- **Auth: `better-auth` + argon2id** (sealed httpOnly cookie sessions, built-in rate-limiting + Origin/CSRF checks). better-auth owns its own tables via its Kysely adapter over the same libSQL DB and runs its migrations at startup (`apps/web/server/plugins/auth-migrate.ts`); passwords use argon2id (via `@node-rs/argon2`) rather than the default scrypt. Optional and non-blocking, only gates saving games; hosting and playing never need an account. OAuth / email-verification / magic-link are future better-auth config. (The earlier scaffold used `nuxt-auth-utils`; replaced during the auth audit.)
+- **Validation: Zod** for every external input (API bodies, plugin manifests, game configs). The editor auto-generates a form from a plugin's Zod config schema when no custom editor ships.
+- **Object storage: `aws4fetch` presigning** to DigitalOcean Spaces (MinIO locally). Browser uploads direct via presigned PUT.
+- **Containers: Docker + compose** (local: app+Postgres+MinIO; prod: app+Postgres-on-volume+Caddy). **Proxy/TLS: Caddy.**
+- **Tooling: pnpm, Biome (or ESLint+Prettier, one choice repo-wide), Vitest** focused on the engine state machine and scoring functions.
+
+## Animation rule, CSS first, Pixi only where it earns it
+
+- **Default to CSS** for all motion: transitions, keyframes, transforms, Web Animations API. The VoteBox prototype proves bar fills, countdown rings, "locked in" stamps, lobby pops, and waiting dots are all clean and theme-aware in pure CSS. Most lobby/gameplay/results motion stays here. CSS is lighter, accessible by default (`prefers-reduced-motion`), and renders identically on every phone.
+- **Reach for Pixi 8 only** for canvas-heavy work: the drawing surface (`DrawCanvas`), pixel-level mini-games, and genuinely particle/scene-heavy results moments (`ConfettiBurst`, big `BarRace`, podium celebrations).
+- **Pixi is mounted directly via a thin composable** (the documented fallback, and what ships today): `DrawCanvas` lazy-imports `pixi.js@8` client-only and mounts a Pixi `Application` into a canvas ref, for that widget only. The `vue3-pixi` component binding (`<Container>/<Sprite>/<Graphics>`) was evaluated but is **not** a dependency, since nothing imported it; if a future Pixi-heavy view wants that component style, add `vue3-pixi` + `pixi-filters` (peers `pixi.js@8`) then. Pixi is opt-in per view, not a baseline cost on every screen.
+- Pixi scenes read the **same theme CSS custom properties** as the DOM, so canvas effects match the active theme.
+
+## Conventions
+
+- **Validate at the boundary** with Zod; never trust API bodies, manifests, or configs.
+- **The end-of-game results page is shared by every game.** `scoreGame` merges each block's `ResultsFragment` into one board, and `GameResults` renders it on the host (a height-capped carousel: it PAGES, it never scrolls a TV) and on phones (a stacked scroll that leads with the reader's own result). Seven different hosts mount that component, so anything about its size or shape belongs in `GameResults`, not in one host's wrapper. `/dev/results` is a gallery of every shape it has to handle; check a change there before believing it.
+- **Test the logic that matters:** engine state machine and scoring functions (pure, so testable) with Vitest. There is no component-test setup (vitest runs in `node`), so when a `.vue` grows real rules, lift them into a pure module and test THAT: a game's `logic.ts`, or `apps/web/app/utils/*.ts` for the shell (the editor rail's ordering rules live there). Vitest covers `packages/**`, `apps/web/server/**`, `apps/web/app/composables/**`, and `apps/web/app/utils/**`. Playwright e2e is optional/later; `scripts/*-smoke.mjs` are the real-browser checks (host + phones + headless `RoomRuntime` players against a live `pnpm dev`), and `scripts/load-test.mjs` is the 100-200 player harness.
+- **Document as you build.** Every package has a README describing its purpose and public surface. Keep `docs/` (architecture, authoring-a-game, clasp-primer, deploy) current with the code.
+- **Accessibility is a build requirement, not polish:** semantic HTML + ARIA, color paired with shape/label (never color alone), `prefers-reduced-motion` honored by every animation, high-contrast-safe tokens, an untimed option on timed rounds, screen-reader support on the phone client. See PRD §2.5.
+- **Commit messages: plain description, NO AI attribution.** No "generated with" lines, no AI co-author trailers, no tool credits in commit metadata. (This overrides any default trailer behavior, follow the project rule.)
+- **Keep dependencies small and current.** Prefer one focused library over a framework that does many things you did not ask for.
+- Room codes are 4 chars from an unambiguous alphabet (no I, O, 0, 1). Every published relay value carries an absolute TTL (default 8h) so the public relay stays tidy.
+
+## Build order (from the PRD roadmap)
+
+MVP: engine + full room runtime and state machine → plugin contract + round primitives → first-party folder registry (Vite glob) → VoteBox and Sketch → optional email/password auth → UI library + four theme packs → animated results → Spaces/MinIO uploads + relay ephemeral media → local compose + single-droplet deploy. Phase two adds external plugins (sandbox bridge, publishing), more games, richer results. Phase three is scale and polish.
+
+## Before you start engine work
+
+Read the CLASP primer in PRD §21, the CLASP skill (`/mnt/skills/user/clasp/SKILL.md` and its references) if present, and confirm the API against the installed `@clasp-to/core` version rather than assuming. The relay is plain pub/sub under whatever addresses Doot chooses; it knows nothing about games.
+
+## Working norms for the agent
+
+- Track multi-step work and double-check it; keep the PRD and these docs in sync when a decision changes.
+- When a referenced file, flag, or version in this file no longer matches reality, verify before relying on it and update this file.
+- Don't add features the PRD lists as non-goals (billing, native apps, voice/video, self-hosted relay in v1, SSO/SAML, a general CMS).

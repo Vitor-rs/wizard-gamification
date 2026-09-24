@@ -1,0 +1,219 @@
+import {useContext, useEffect, useState} from "react";
+import {QuizContext} from "@/common/contexts/Quiz";
+import {useNavigate, useOutletContext} from "react-router-dom";
+import "./styles.sass";
+import {QRCodeSVG} from "qrcode.react";
+import Triangle from "@/pages/Host/assets/Triangle.jsx";
+import {BrandingContext} from "@/common/contexts/Branding";
+import {motion} from "framer-motion";
+import Button from "@/common/components/Button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faGamepad, faUser, faLock, faLockOpen} from "@fortawesome/free-solid-svg-icons";
+import {socket} from "@/common/utils/SocketUtil.js";
+import {getCharacterEmoji} from "@/common/data/characters";
+import {useSoundManager} from "@/common/utils/SoundManager.js";
+import SoundRenderer from "@/common/components/SoundRenderer";
+import SoundControl from "@/common/components/SoundControl";
+import BackgroundChooser from "@/common/components/BackgroundChooser";
+import toast from "react-hot-toast";
+
+export const Host = () => {
+    const navigate = useNavigate();
+    const {setCirclePosition} = useOutletContext();
+    const {isLoaded, quizRaw, setPlayerCount} = useContext(QuizContext);
+    const {titleImg} = useContext(BrandingContext);
+    const soundManager = useSoundManager();
+    const [qrShown, setQrShown] = useState(false);
+
+    const [roomCode, setRoomCode] = useState("0000");
+    const [players, setPlayers] = useState([]);
+    const [lobbyAmbientId, setLobbyAmbientId] = useState(null);
+    const [roomLocked, setRoomLocked] = useState(false);
+
+    useEffect(() => {
+        setPlayerCount(players.filter(p => !p.disconnected).length);
+    }, [players, setPlayerCount]);
+
+    const getJoinUrl = () => {
+        return window.location.href.split("/host")[0]
+            + "/?code=" + roomCode;
+    }
+
+    useEffect(() => {
+        if (!isLoaded) {
+            navigate("/load");
+            return;
+        }
+
+        socket.emit("CREATE_ROOM", {settings: quizRaw?.settings || {}}, (roomCode) => {
+            setRoomCode(roomCode);
+        });
+
+        socket.on("PLAYER_JOINED", (player) => {
+            setPlayers(players => [...players, player]);
+            soundManager.playFeedback('PLAYER_JOINED');
+        });
+
+        socket.on("PLAYER_LEFT", (player) => {
+            setPlayers(players => players.filter(p => p.id !== player.id));
+            soundManager.playFeedback('PLAYER_LEFT');
+        });
+
+        socket.on("PLAYER_DISCONNECTED", (player) => {
+            if (player.temporary) {
+                setPlayers(players => players.map(p => p.id === player.id ? {...p, disconnected: true} : p));
+            } else {
+                setPlayers(players => players.filter(p => p.id !== player.id));
+                soundManager.playFeedback('PLAYER_LEFT');
+            }
+        });
+
+        socket.on("PLAYER_RECONNECTED", (player) => {
+            setPlayers(players => {
+                if (player.oldId) {
+                    return players.map(p => p.id === player.oldId ? {...player, disconnected: false} : p);
+                } else {
+                    const existingPlayer = players.find(p => p.name === player.name);
+                    if (existingPlayer) {
+                        return players.map(p => p.name === player.name ? {...player, disconnected: false} : p);
+                    } else {
+                        return [...players, player];
+                    }
+                }
+            });
+        });
+
+        return () => {
+            socket.off("PLAYER_JOINED");
+            socket.off("PLAYER_LEFT");
+            socket.off("PLAYER_DISCONNECTED");
+            socket.off("PLAYER_RECONNECTED");
+
+            if (lobbyAmbientId) {
+                soundManager.stopSound(lobbyAmbientId);
+            }
+        }
+    }, [isLoaded]);
+
+    const kickPlayer = (player) => {
+        if (player.disconnected) {
+            socket.emit("KICK_PLAYER", {name: player.name}, () => {});
+        } else {
+            socket.emit("KICK_PLAYER", {id: player.id}, () => {});
+        }
+    }
+
+    const toggleRoomLock = () => {
+        socket.emit("LOCK_ROOM", {}, (response) => {
+            if (response?.success) {
+                setRoomLocked(response.locked);
+                toast.success(response.locked ? "Sala trancada" : "Sala destrancada", {
+                    duration: 2000
+                });
+            }
+        });
+    }
+
+    const startGame = () => {
+        if (players.length === 0) return;
+
+        if (lobbyAmbientId) {
+            soundManager.stopSound(lobbyAmbientId);
+            setLobbyAmbientId(null);
+        }
+        
+        navigate("/host/ingame");
+    }
+
+    useEffect(() => {
+        setCirclePosition(["-25rem 0 0 -25rem", "-8rem 0 0 -8rem"]);
+
+        const ambientId = soundManager.playAmbient('LOBBY');
+        setLobbyAmbientId(ambientId);
+        
+        return () => {
+            if (ambientId) {
+                soundManager.stopSound(ambientId);
+            }
+        };
+    }, []);
+
+    if (!isLoaded) {
+        return null;
+    }
+
+    return (
+        <div className="host-page">
+            {qrShown && <div className="qr-overlay" onClick={() => setQrShown(false)}>
+                <motion.div className="qr-container" initial={{scale: 0.5}} animate={{scale: 1}}>
+                    <QRCodeSVG value={getJoinUrl()} size={window.innerHeight * 0.7} className="qr"/>
+                </motion.div>
+            </div>}
+
+            <div className="quiz-info-container">
+                <motion.div className="quiz-information" initial={{opacity: 0, y: -100}} animate={{opacity: 1, y: 0}}>
+                    <div className="info-header">
+                        <h1>“{quizRaw.title}”</h1>
+                        <QRCodeSVG value={getJoinUrl()} size={100} className="qr"
+                                onClick={() => setQrShown(!qrShown)}/>
+                    </div>
+
+                    <p>Conecte-se pelo site <span>{location.host.split(":")[0]}</span> com o Código:</p>
+                    <div className="room-code-container">
+                        <h2>{roomCode}</h2>
+                        {roomLocked && <div className="lock-indicator">
+                            <FontAwesomeIcon icon={faLock} />
+                        </div>}
+                    </div>
+
+                    <Triangle/>
+                </motion.div>
+                <div className="host-actions">
+                    <Button 
+                        icon={roomLocked ? faLockOpen : faLock} 
+                        padding="0.5rem 0.8rem" 
+                        onClick={toggleRoomLock}
+                        variant={roomLocked ? "secondary" : "primary"}
+                    />
+                    <Button text="Iniciar" icon={faGamepad} padding="0.5rem 1rem" onClick={startGame}
+                            disabled={players.length === 0}/>
+                </div>
+            </div>
+
+
+            <motion.div className="member-info" initial={{opacity: 0, x: -100}} animate={{opacity: 1, x: 0}}>
+                <img src={titleImg} alt="Quiz Logo" className="quiz-logo"/>
+                {players.length === 0 && <h2>Aguardando jogadores...</h2>}
+
+                <div className="player-list">
+                    {players.map(player => (
+                        <motion.div
+                            key={player.id}
+                            className={`player ${player.disconnected ? 'disconnected' : ''}`}
+                            initial={{scale: 0, y: 20}}
+                            animate={{scale: 1, y: 0}}
+                            transition={{type: "spring", stiffness: 320, damping: 18}}
+                            onClick={() => kickPlayer(player)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); kickPlayer(player); } }}
+                            aria-label={`Remover ${player.name}`}
+                            title="Clique para remover"
+                        >
+                            <div className="player-character">{getCharacterEmoji(player.character)}</div>
+                            <h3>{player.name}</h3>
+                        </motion.div>
+                    ))}
+                </div>
+            </motion.div>
+
+            <motion.div className="system-ui" initial={{opacity: 0, y: 100}} animate={{opacity: 1, y: 0}}>
+                <Button icon={faUser} text={players.length} padding="0.5rem 0.8rem"/>
+                <SoundControl />
+                <BackgroundChooser />
+            </motion.div>
+            
+            <SoundRenderer />
+        </div>
+    );
+}

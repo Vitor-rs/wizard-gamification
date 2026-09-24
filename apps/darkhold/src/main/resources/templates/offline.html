@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>Offline - Darkhold Quiz</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link href="/styles/darkhold-styles.css" rel="stylesheet" />
+    <link href="/styles/offline.css" rel="stylesheet" />
+    <script type="text/javascript" src="/scripts/theme-manager.js"></script>
+</head>
+<body class="offline-page">
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        <h1 class="offline-title">You're Offline</h1>
+        <p class="offline-message">
+            It looks like you've lost your internet connection. Please check your connection and try again.
+        </p>
+        <button class="retry-btn" onclick="window.location.reload();">
+            <i class="fas fa-redo"></i>
+            <span>Try Again</span>
+        </button>
+
+        <div class="offline-tips">
+            <div class="offline-tips-title">Quick Tips:</div>
+            <ul class="offline-tips-list">
+                <li>Check your WiFi or mobile data</li>
+                <li>Try disabling airplane mode</li>
+                <li>Restart your router if needed</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">paper\u200bclickers</string>
+    <string name="app_title">paperclickers</string>
+
+    <string name="get_started">Iniciar paperclickers</string>
+    <string name="include_tips_in_settings">Você pode ativar o uso guiado\nnas configurações</string>
+
+    <string name="start_button_with_tips">uso guiado</string>
+    <string name="start_button_no_tips">sem dicas de uso</string>
+
+    <string name="onboarding_page_1_description">A maneira fácil de avaliar\nsuas alunas e alunos</string>
+    <string name="onboarding_page_2_description">Imprima e distribua os\ncartões de resposta</string>
+    <string name="onboarding_page_3_description">Faça uma pergunta e\ncolete as respostas</string>
+    <string name="onboarding_page_4_description">Mantenha o histórico\nde suas alunas e alunos</string>
+
+    <string name="start_button">início</string>
+    <string name="save_question_title">Pergunta para turma</string>
+    <string name="done_button">nova pergunta</string>
+    
+    <string name="hint1Start">Percorra a sala até detectar todos os códigos:\u0020</string>
+    <string name="hint1End">\u0020encontrados</string>
+    <string name="hint2">Para terminar, pressione a tela por dois segundos</string>
+
+    <string name="frequencies_debug">[dev] Frequência dos códigos detectados irá aparecer aqui</string>
+    
+    <string name="title_activity_about">Sobre paperclickers</string>
+
+    <string name="yes">Sim</string>
+    <string name="no">Não</string>
+
+    <string name="saved_answers_log">Respostas gravadas no registro</string>
+    <string name="error_saving_pdf">Erro gravando pdf dos cartões de resposta</string>
+    <string name="error_saving_log">Erro gravando registro de respostas</string>
+    <string name="file_saved">salvo</string>
+
+    <string name="pie_chart_answers">respostas</string>
+    
+    <string name="cannot_generate_PDF">Não é possível gerar cartões de resposta</string>
+    <string name="visit_project_page_for_topcodes">Geração dos TopCodes requer versão Android 4.4 ou superior.\n\nVisite o GitHub do projeto para obter os códigos dos alunos</string>
+    <string name="go_github">Ir para GitHub</string>    
+
+    <string name="hold_area">segure aqui</string>
+    
+    <string name="development_current_cycle">ciclo:</string>
+    <string name="development_current_threshold">limite:</string>
+    
+    <string name="auto_promotion_1">siga-nos em</string>
+    <string name="auto_promotion_2">github.com/learningtitans/paperclickers</string>
+
+    <string name="paperclickers_about">file:///android_asset/paperclickers_about_pt-br.html</string>
+
+    <string name="overlay_start_screen_print_txt">Use configurações para imprimir os cartões de resposta</string>
+    <string name="overlay_start_screen_start_txt">Inicie a captura das respostas</string>
+
+    <string name="overlay_start_screen_share_txt">Use configurações para compartilhar o registro de respostas</string>
+
+    <string name="overlay_capture_screen_txt">Lembre-se de ficar pelo menos a 2 metros de distância dos cartões de resposta!</string>
+
+    <string name="overlay_answers_screen_return_txt">Volte para captura caso estejam faltando respostas</string>
+    <string name="overlay_answers_screen_scroll_txt">Deslize a tela para ver todas as respostas</string>
+    <string name="overlay_answers_screen_chart_txt">Veja o gráfico das respostas</string>
+
+    <string name="overlay_chart_screen_return_txt">Volte para as respostas</string>
+    <string name="overlay_chart_screen_new_txt">Faça uma nova pergunta</string>
+
+    <string name="topcodes_pdf_single_file_name">paperclickers_topCodes.pdf</string>
+    <string name="topcodes_pdf_recto_file_name">paperclickers_topCodes_frente.pdf</string>
+    <string name="topcodes_pdf_verso_file_name">paperclickers_topCodes_verso.pdf</string>
+    <string name="answerslog_file_name">paperclickers_RegistroDeRespostas.csv</string>
+    <string name="answerslog_timestamp_header">DATA E HORA</string>
+    <string name="answerslog_tag_header">QUESTÃO</string>
+
+</resources>

@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>Getting Started: Darkhold classroom quiz experience</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link href="/styles/darkhold-styles.css" rel="stylesheet" />
+    <link href="/styles/team-styles.css" rel="stylesheet" />
+    <link href="/styles/game-wait.css" rel="stylesheet" />
+    <script type="text/javascript" src="/scripts/theme-manager.js"></script>
+    <script type="text/javascript" src="/scripts/audio-manager.js"></script>
+    <script type="text/javascript" src="/scripts/language-manager.js"></script>
+    <script type="text/javascript" src="/scripts/accessibility.js"></script>
+    <script type="text/javascript" src="/scripts/core/sockjs.min.js"></script>
+    <script type="text/javascript" src="/scripts/core/stomp.min.js"></script>
+    <script type="text/javascript" src="/scripts/game-wait-scripts.js"></script>
+    <script type="text/javascript" src="/scripts/common-scripts.js"></script>
+</head>
+<body class="game-lobby-page" onload="connect()">
+    <div th:insert="~{navbar :: navbar}"></div>
+
+    <!-- Moderator Warning Banner -->
+    <div th:if="${moderatorWarning}" class="alert alert-warning alert-dismissible fade show" style="margin: 1rem auto; max-width: 800px; text-align: center;" role="alert">
+        <strong th:text="'⚠️ ' + #{game.lobby.moderatorWarning}">⚠️ You are the moderator of this game.</strong><br/>
+        <span th:text="#{game.lobby.moderatorWarningDetail}">In multiplayer mode, moderators control the game but do not earn points.</span><br/>
+        <small th:text="#{game.lobby.moderatorWarningHint}">Consider using a different name if you want to participate as a player.</small>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="game-lobby-container">
+    <form action="#" th:object="${gameinfo}" method="post">
+        <input type="hidden" th:value="${gameinfo.gamePin}" id="quizPin"/>
+        <input type="hidden" th:value="${gameinfo.name}" id="name"/>
+        <input type="hidden" th:name="quiz_pin" id="quiz_pin"/>
+        <input type="hidden" th:value="${gameinfo.moderator}" id="moderator"/>
+        <input type="hidden" th:value="${teamMode}" id="teamMode"/>
+        <input type="hidden" th:value="${assignmentMethod}" id="assignmentMethod"/>
+
+        <!-- PIN Display -->
+        <div class="pin-section">
+            <div class="pin-label" th:text="#{game.lobby.quizPinIs}">Quiz PIN</div>
+            <div class="pin-display">[[${gameinfo.gamePin}]]</div>
+            <div th:if="${teamMode}" class="pin-badge">
+                <i class="fas fa-users"></i>
+                <span th:text="#{game.lobby.teamMode}">Team Mode</span>
+            </div>
+            <div id="myTeamDisplay" class="my-team-display" style="display:none;">
+                <span th:text="#{game.lobby.yourTeam}">Your Team:</span>
+                <span id="myTeamBadge" class="team-badge"></span>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div class="game-wait-message">
+            <div id="messenger">
+                <p id="message_disp"></p>
+            </div>
+            <p th:text="#{game.lobby.waitingForGame}">Waiting for Game to Start...</p>
+            <p class="participant-count-text">
+                <span class="participant-count-number" id="participantCount">0</span>
+                <span th:text="#{game.lobby.participantsJoined}">participant(s) joined</span>
+            </p>
+        </div>
+        <!-- Team Mode View -->
+        <div th:if="${teamMode}" id="teamModeView" class="container">
+            <!-- Unassigned Players (shown for moderator in MANUAL mode) -->
+            <div id="unassignedSection" class="unassigned-section" style="display:none;">
+                <h5 th:text="#{game.lobby.unassignedPlayers}">Unassigned Players</h5>
+                <div id="unassignedPlayers" class="unassigned-players-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            <div id="teamColumns" class="team-columns">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Standard View (non-team mode) -->
+        <div th:unless="${teamMode}" class="player-list-container">
+            <table id="conversation" class="player-list-table">
+                <thead>
+                    <tr>
+                        <th th:text="#{game.lobby.participants}">Participants</th>
+                    </tr>
+                </thead>
+                <tbody id="players">
+                    <tr th:each="user : ${gameinfo.users}">
+                        <td>
+                            <i class="fas fa-user" style="margin-right: 0.5rem; color: var(--color-primary);"></i>
+                            <span th:text="${user}"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Hidden table for team mode (used by WebSocket handlers) -->
+        <div th:if="${teamMode}" style="display:none;">
+            <table id="conversation">
+                <tbody id="players"></tbody>
+            </table>
+        </div>
+    </form>
+    </div>
+    <script type="text/javascript" src="/scripts/core/jquery-3.7.0.min.js"></script>
+    <script type="text/javascript" src="/scripts/core/popper.min.js"></script>
+    <script type="text/javascript" src="/scripts/core/bootstrap-5.3.1/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">paper\u200bclickers</string>
+    <string name="app_title">paperclickers</string>
+
+    <string name="get_started">Commencez paperclickers</string>
+    <string name="include_tips_in_settings">Vous pouvez activer l\'utilisation\nguidée dans les paramètres</string>
+
+    <string name="start_button_with_tips">utilization guidée</string>
+    <string name="start_button_no_tips">pas de conseils d\'utilisation</string>
+
+    <string name="onboarding_page_1_description">Un moyen facile d\'enquêter\nsur vos étudiants</string>
+    <string name="onboarding_page_2_description">Imprimez et distribuez\nles cartes de réponse</string>
+    <string name="onboarding_page_3_description">Posez une question et\nrassemblez les réponses</string>
+    <string name="onboarding_page_4_description">Gardez une trace\nde vos étudiants</string>
+
+    <string name="start_button">début</string>
+    <string name="save_question_title">Question pour la classe</string>
+    <string name="done_button">nouvelle question</string>
+    
+    <string name="hint1Start">Parcourez la pièce jusqu\'à ce que vous voyiez tous les codes:\u0020</string>
+    <string name="hint1End">\u0020trouvé</string>
+    <string name="hint2">Pour finir, appuyez sur l\'écran pendant deux secondes</string>
+
+    <string name="frequencies_debug">[dev] La fréquence des codes détectés appera ici</string>
+    
+    <string name="title_activity_about">À propos des paperclickers</string>
+
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+
+    <string name="saved_answers_log">Réponses enregistrées dans le journal</string>
+    <string name="error_saving_pdf">Erreur lors de la sauvegarde du pdf des cartes de réponse</string>
+    <string name="error_saving_log">Erreur lors de l\'enregistrement des réponses</string>
+    <string name="file_saved">enregistré</string>
+
+    <string name="pie_chart_answers">réponses</string>
+    
+    <string name="cannot_generate_PDF">Ne peut pas générer des cartes de réponse</string>
+    <string name="visit_project_page_for_topcodes">La génération de TopCodes nécessite Android 4.4 ou plus.\n\nVisitez le projet GitHub pour obtenir les codes des étudiants</string>
+    <string name="go_github">Aller à GitHub</string>
+
+    <string name="hold_area">Tenez-le ici</string>
+    
+    <string name="development_current_cycle">cycle:</string>
+    <string name="development_current_threshold">seuil:</string>
+    
+    <string name="auto_promotion_1">suivez-nous sur</string>
+    <string name="auto_promotion_2">github.com/learningtitans/paperclickers</string>
+
+    <string name="paperclickers_about">file:///android_asset/paperclickers_about_fr-fr.html</string>
+
+    <string name="overlay_start_screen_print_txt">Utiliser les paramètres pour imprimer les cartes de réponse</string>
+    <string name="overlay_start_screen_start_txt">Commencez la capture des réponses</string>
+
+    <string name="overlay_start_screen_share_txt">Utiliser les paramètres pour partager le journal des réponses</string>
+
+    <string name="overlay_capture_screen_txt">N\'oubliez pas de rester à au moins 2 mètres des cartes de réponses!</string>
+
+    <string name="overlay_answers_screen_return_txt">Retournez à la capture si vous manquez des réponses</string>
+    <string name="overlay_answers_screen_scroll_txt">Faites défiler verticalement la liste pour vérifier toutes les réponses</string>
+    <string name="overlay_answers_screen_chart_txt">Voir le graphique des réponses</string>
+
+    <string name="overlay_chart_screen_return_txt">Retournez aux réponses</string>
+    <string name="overlay_chart_screen_new_txt">Poser une nouvelle question</string>
+
+    <string name="topcodes_pdf_single_file_name">paperclickers_topCodes.pdf</string>
+    <string name="topcodes_pdf_recto_file_name">paperclickers_topCodes_recto.pdf</string>
+    <string name="topcodes_pdf_verso_file_name">paperclickers_topCodes_verso.pdf</string>
+    <string name="answerslog_file_name">paperclickers_EnregistrementsDesReponses.csv</string>
+    <string name="answerslog_timestamp_header">HORODATAGE</string>
+    <string name="answerslog_tag_header">PROBLÈME</string>
+
+</resources>

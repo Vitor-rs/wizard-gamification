@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" th:content="#{app.description}" content="darkhold registration page" />
+    <meta name="author" content="Suraj" />
+    <title th:text="#{registration.title} + ': ' + #{app.name} + ' ' + #{app.description}">Registration: Darkhold classroom quiz experience</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link rel="manifest" href="/manifest.json">
+    <link href="/styles/darkhold-styles.css" rel="stylesheet" />
+    <link href="/styles/login.css" rel="stylesheet" />
+    <script type="text/javascript" src="/scripts/theme-manager.js"></script>
+    <script type="text/javascript" src="/scripts/language-manager.js"></script>
+    <script type="text/javascript" src="/scripts/common-scripts.js"></script>
+    <script type="text/javascript" src="/scripts/audio-manager.js"></script>
+    <script type="text/javascript" src="/scripts/accessibility.js"></script>
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo/Brand -->
+            <div class="login-brand">
+                <img src="/images/favicon.png" alt="Darkhold" class="login-logo">
+                <h1 class="login-title" th:text="#{registration.title}">Create Account</h1>
+                <p class="login-subtitle" th:text="#{registration.subtitle}">Join Darkhold to create and play quizzes</p>
+            </div>
+            <!-- Registration Form -->
+            <form th:action="@{/registration}" method="post" th:object="${user}" class="login-form">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+
+                <!-- First Name -->
+                <div class="form-group">
+                    <label for="name" class="form-label" th:text="#{registration.firstName}">First Name</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user input-icon"></i>
+                        <input id="name" class="form-input" type="text" th:field="*{firstName}"
+                               th:placeholder="#{registration.firstName}" placeholder="First Name"
+                               required minlength="2" maxlength="90" autofocus="autofocus" />
+                    </div>
+                </div>
+
+                <!-- Last Name -->
+                <div class="form-group">
+                    <label for="name2" class="form-label" th:text="#{registration.lastName}">Last Name</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user input-icon"></i>
+                        <input id="name2" class="form-input" type="text" th:field="*{lastName}"
+                               th:placeholder="#{registration.lastName}" placeholder="Last Name"
+                               required minlength="2" maxlength="90" />
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="form-label" th:text="#{registration.email}">Email</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input id="email" class="form-input" type="email" th:field="*{email}"
+                               th:placeholder="#{registration.email}" placeholder="example@email.com"
+                               required minlength="6" maxlength="90" />
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label" th:text="#{registration.password}">Password</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input id="password" class="form-input" type="password" th:field="*{password}"
+                               th:placeholder="#{registration.password}" placeholder="Enter password"
+                               required minlength="8" maxlength="90" />
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-login">
+                    <span th:text="#{registration.submit}">Create Account</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <!-- Login Link -->
+                <div class="login-footer">
+                    <span th:text="#{registration.alreadyRegistered}">Already registered?</span>
+                    <a href="/login" th:href="@{/login}" class="login-link" th:text="#{registration.loginHere}">Login here</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script type="text/javascript" src="/scripts/core/popper.min.js"></script>
+    <script type="text/javascript" src="/scripts/core/bootstrap-5.3.1/bootstrap.min.js"></script>
+</body>
+</html>

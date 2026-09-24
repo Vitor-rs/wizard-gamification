@@ -1,0 +1,12 @@
+{
+  "name": "wizard-paperclickers-web",
+  "version": "1.0.0",
+  "description": "PaperClickers Web - Scanner de cartões TopCodes e Apresentador de Quizzes Wizard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["wizard", "paperclickers", "plickers", "topcodes", "gamification"],
+  "author": "Wizard Gamification Team",
+  "license": "MIT"
+}

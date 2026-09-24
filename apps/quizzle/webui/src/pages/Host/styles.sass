@@ -1,0 +1,195 @@
+@use "@/common/styles/colors" as *
+
+.host-page .quiz-info-container
+  position: fixed
+  top: 3rem
+  right: 3rem
+  gap: 1rem
+  display: flex
+  flex-direction: column
+  align-items: flex-end
+
+.host-page .quiz-information
+  max-width: 25rem
+  padding: 1.25rem 1.25rem
+  border-radius: 0.75rem
+  border: none
+  background: white
+  color: $text
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25)
+
+  .info-header
+    display: flex
+    align-items: center
+    gap: 2rem
+    justify-content: space-between
+
+    h1
+      margin: 0
+      min-width: 0
+      flex: 1
+      overflow: hidden
+      text-overflow: ellipsis
+
+    svg
+      width: 4.5rem
+      flex-shrink: 0
+      margin-left: auto
+
+  p
+    font-size: 18pt
+
+  span
+    color: $primary
+
+  .room-code-container
+    display: flex
+    align-items: center
+    gap: 1rem
+
+  h2
+    font-size: 24pt
+    margin: 0
+    color: $background
+    background-color: $primary
+    width: fit-content
+    padding: 0.8rem 1.5rem
+    border-radius: 0.5rem
+
+  .lock-indicator
+    font-size: 1.5rem
+    opacity: 0.8
+
+  .triangle
+    position: absolute
+    right: 1rem
+    bottom: 7.5rem
+    width: 6rem
+    height: 6rem
+    border-radius: 1rem
+    transform: rotate(22deg)
+
+.host-page .host-actions
+  display: flex
+  gap: 1rem
+  align-items: center
+
+.host-page .member-info
+  display: flex
+  flex-direction: column
+  align-items: center
+  margin: 0 auto
+  padding-top: 22rem
+  width: 100%
+
+  img
+    width: 22rem
+
+  h2
+    color: white
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35)
+
+  .player-list
+    width: 70rem
+    max-width: 92vw
+    max-height: 30rem
+    overflow-y: auto
+    display: flex
+    flex-wrap: wrap
+    justify-content: center
+    margin-top: 2rem
+    align-items: flex-start
+    align-content: flex-start
+    gap: 0.75rem
+
+  .player
+    display: flex
+    align-items: stretch
+    border-radius: 0.5rem
+    overflow: hidden
+    color: white
+    user-select: none
+    position: relative
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2), 0 6px 14px rgba(0, 0, 0, 0.18)
+    background: transparent
+    cursor: pointer
+    transition: transform 0.15s ease, filter 0.15s ease
+
+    &.disconnected
+      opacity: 0.55
+      filter: saturate(0.6)
+
+    .player-character
+      font-size: 2.1rem
+      display: flex
+      align-items: center
+      justify-content: center
+      width: 3.75rem
+      height: 3.75rem
+      background: #3a0f7a
+      color: white
+      flex-shrink: 0
+      transition: background 0.15s ease
+
+    h3
+      margin: 0
+      padding: 0 1.25rem
+      display: flex
+      align-items: center
+      background: $primary
+      font-size: 1.25rem
+      font-weight: 800
+      letter-spacing: -0.01em
+      min-width: 4rem
+      max-width: 14rem
+      white-space: nowrap
+      overflow: hidden
+      text-overflow: ellipsis
+      transition: background 0.15s ease, text-decoration-color 0.15s ease
+
+    &:hover:not(.disconnected),
+    &:focus-visible:not(.disconnected)
+      transform: translateY(-2px)
+
+      .player-character
+        background: #7a1a1a
+
+      h3
+        background: #e21b3c
+        text-decoration: line-through
+
+    &:focus-visible
+      outline: 3px solid white
+      outline-offset: 2px
+
+
+.host-page .system-ui
+  position: fixed
+  bottom: 1rem
+  left: 1rem
+  gap: 1rem
+  display: flex
+
+
+.host-page .qr
+  cursor: zoom-in
+
+.host-page .qr-dialog
+  position: fixed
+  top: 0
+  left: 0
+  width: 100vw
+  height: 100vh
+  display: flex
+  align-items: center
+  justify-content: center
+  background-color: rgba(0, 0, 0, 0.5)
+  z-index: 100
+  cursor: zoom-out
+
+.host-page .qr-big
+  width: 25vw
+  height: 25vw
+  border: 1rem solid white
+  border-radius: 2rem
+  cursor: zoom-out

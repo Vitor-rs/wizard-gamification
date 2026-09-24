@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">paper\u200bclickers</string>
+    <string name="app_title">paperclickers</string>
+
+    <string name="get_started">Iniciar paperclickers</string>
+    <string name="include_tips_in_settings">Siempre puede habilitar el uso guiado\nen la configuración</string>
+
+    <string name="start_button_with_tips">uso guiado</string>
+    <string name="start_button_no_tips">sin consejos de uso</string>
+
+    <string name="onboarding_page_1_description">La manera fácil de evaluar\na sus alumnas y alumnos</string>
+    <string name="onboarding_page_2_description">Imprima y distribuya\nlas tarjetas de respuesta</string>
+    <string name="onboarding_page_3_description">Haz una pregunta y\n recoge las respuestas</string>
+    <string name="onboarding_page_4_description">Mantenga el historial\nde sus alumnas y alumnos</string>
+
+    <string name="start_button">inicio</string>
+    <string name="save_question_title">Pregunta para la clase</string>
+    <string name="done_button">nueva pregunta</string>
+    
+    <string name="hint1Start">Desplácese a la sala hasta detectar todos los códigos:\u0020</string>
+    <string name="hint1End">\u0020encontrados</string>
+    <string name="hint2">Para terminar, presione la pantalla durante dos segundos</string>
+
+    <string name="frequencies_debug">[dev] La frecuencia de los códigos detectados aparecerá aquí</string>
+    
+    <string name="title_activity_about">Acerca de paperclickers</string>
+
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+
+    <string name="saved_answers_log">Respuestas grabadas en el registro</string>
+    <string name="error_saving_pdf">Error grabando pdf de los códigos de las tarjetas de respuesta</string>
+    <string name="error_saving_log">Error grabando el registro de respuestas</string>
+    <string name="file_saved">salvo</string>
+
+    <string name="pie_chart_answers">respuestas</string>
+    
+    <string name="cannot_generate_PDF">No se pueden generar las tarjetas de respuesta</string>
+    <string name="visit_project_page_for_topcodes">Generación de los TopCodes requiere versión Android 4.4 o superior.\n\nVisite el GitHub del proyecto para obtener los códigos de los alumnos</string>
+    <string name="go_github">Ir a GitHub</string>
+
+    <string name="hold_area">sostén aquí</string>
+    
+    <string name="development_current_cycle">ciclo:</string>
+    <string name="development_current_threshold">limite:</string>
+    
+    <string name="auto_promotion_1">nos sigue en</string>
+    <string name="auto_promotion_2">github.com/learningtitans/paperclickers</string>
+
+    <string name="paperclickers_about">file:///android_asset/paperclickers_about_es-es.html</string>
+
+    <string name="overlay_start_screen_print_txt">Utilice la configuración para imprimir las tarjetas de respuesta</string>
+    <string name="overlay_start_screen_start_txt">Inicie la captura de respuestas</string>
+
+    <string name="overlay_start_screen_share_txt">Utilice la configuración para compartir el registro de respuestas</string>
+
+    <string name="overlay_capture_screen_txt">Recuerde quedarse al menos a 2 metros de las tarjetas de respuesta!</string>
+
+    <string name="overlay_answers_screen_return_txt">Vuelva a la captura si faltan respuestas</string>
+    <string name="overlay_answers_screen_scroll_txt">Deslice la pantalla para ver todas las respuestas</string>
+    <string name="overlay_answers_screen_chart_txt">Ver el gráfico de respuestas</string>
+
+    <string name="overlay_chart_screen_return_txt">Vuelve a las respuestas</string>
+    <string name="overlay_chart_screen_new_txt">Hacer una nueva pregunta</string>
+
+    <string name="topcodes_pdf_single_file_name">paperclickers_topCodes.pdf</string>
+    <string name="topcodes_pdf_recto_file_name">paperclickers_topCodes_frente.pdf</string>
+    <string name="topcodes_pdf_verso_file_name">paperclickers_topCodes_verso.pdf</string>
+    <string name="answerslog_file_name">paperclickers_RegistroDeRespuestas.csv</string>
+    <string name="answerslog_timestamp_header">FECHA Y HORA</string>
+    <string name="answerslog_tag_header">PREGUNTA</string>
+
+</resources>

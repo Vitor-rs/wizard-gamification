@@ -1,0 +1,757 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 🦅 WIZARD GAMES — Design System CSS (Brandbook 2025)
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * Baseado no Manual Oficial de Identidade Visual Wizard by Pearson:
+ *   - Vermelho Institucional: #E70022 (Pantone 185 C)
+ *   - Azul Institucional:     #021167 (Navy Profundo)
+ *   - Azul Dark Background:   #05081E / #0A1138
+ *   - Off-White:              #FBF5F2
+ *   - Tipografia:             Work Sans (Títulos: ExtraBold Italic Caixa Alta)
+ *   - Cores de Apoio:         Amarelo #FFBA00, Ciano #00A6ED, Verde #00911C
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap');
+
+/* ─── TOKENS / CSS CUSTOM PROPERTIES ──────────────── */
+:root {
+  /* Vermelho Oficial Wizard */
+  --wiz-red:          #E70022;
+  --wiz-red-dark:     #B5001A;
+  --wiz-red-light:    #EB334F;
+  --wiz-red-soft:     #FACCD4;
+  --wiz-red-bg:       rgba(231, 0, 34, 0.08);
+  --wiz-red-glow:     0 0 25px rgba(231, 0, 34, 0.45);
+
+  /* Mapeado para compatibilidade total com o sistema anterior */
+  --wiz-orange:       #E70022;
+  --wiz-orange-light: #EB334F;
+  --wiz-orange-pale:  #FACCD4;
+  --wiz-flame:        #B5001A;
+
+  /* Azul Oficial Wizard (Navy Institucional) */
+  --wiz-navy:         #021167;
+  --wiz-navy-dark:    #05081E;
+  --wiz-navy-deep:    #0A1138;
+  --wiz-navy-surface: #0E1A4E;
+  --wiz-navy-light:   #1A2E7B;
+  --wiz-navy-muted:   #364085;
+
+  /* Cores de Apoio Wizard (Idiomas & Gamificação) */
+  --wiz-gold:         #FFBA00;
+  --wiz-gold-light:   #FFD666;
+  --wiz-cyan:         #00A6ED;
+  --wiz-cyan-light:   #33B8F0;
+  --wiz-green:        #00911C;
+  --wiz-green-light:  #27AE60;
+
+  /* Neutros e Off-White Oficial (#FBF5F2) */
+  --wiz-white:        #FFFFFF;
+  --wiz-off-white:    #FBF5F2;
+  --wiz-gray-100:     #F3EFEA;
+  --wiz-gray-200:     #E2DBD5;
+  --wiz-gray-300:     #CCCFE0;
+  --wiz-gray-400:     #94A3B8;
+  --wiz-gray-600:     #64748B;
+  --wiz-gray-800:     #1E293B;
+
+  /* Semânticas */
+  --wiz-success:      #00911C;
+  --wiz-success-bg:   rgba(0, 145, 28, 0.12);
+  --wiz-error:        #E70022;
+  --wiz-error-bg:     rgba(231, 0, 34, 0.12);
+  --wiz-warning:      #FFBA00;
+  --wiz-warning-bg:   rgba(255, 186, 0, 0.15);
+  --wiz-info:         #00A6ED;
+
+  /* Cores para cards dos alunos (Wizard Palette) */
+  --card-1:  #E70022;
+  --card-2:  #021167;
+  --card-3:  #00911C;
+  --card-4:  #FFBA00;
+  --card-5:  #00A6ED;
+  --card-6:  #8E44AD;
+  --card-7:  #E67E22;
+  --card-8:  #00B894;
+  --card-9:  #E91E63;
+  --card-10: #0984E3;
+  --card-11: #2ECC71;
+  --card-12: #D35400;
+
+  /* Tipografia Oficial Wizard: Work Sans */
+  --font-display: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body:    'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Raios */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-pill: 9999px;
+
+  /* Sombras */
+  --shadow-sm:   0 2px 4px rgba(5, 8, 30, 0.06);
+  --shadow-md:   0 6px 16px rgba(5, 8, 30, 0.10);
+  --shadow-lg:   0 12px 32px rgba(5, 8, 30, 0.18);
+  --shadow-glow: 0 0 25px rgba(231, 0, 34, 0.40);
+
+  /* Transições */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+
+/* ─── RESET & BASE ────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--wiz-gray-800);
+  background: var(--wiz-off-white);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--wiz-navy);
+  letter-spacing: 0.5px;
+}
+
+input, button, select, textarea {
+  font-family: inherit;
+}
+
+
+/* ─── HEADER ──────────────────────────────────────── */
+.wiz-header {
+  background: linear-gradient(135deg, var(--wiz-navy-dark) 0%, var(--wiz-navy) 100%);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid var(--wiz-red);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(2, 17, 103, 0.35);
+}
+
+.wiz-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wiz-logo-img {
+  height: 32px;
+  width: auto;
+  max-width: 170px;
+  display: block;
+}
+
+.wiz-header__tag {
+  background: var(--wiz-red);
+  color: var(--wiz-white);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.wiz-header__eagle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--wiz-red), var(--wiz-red-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: var(--shadow-glow);
+}
+
+.wiz-header__title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--wiz-white);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.wiz-header__title span {
+  color: var(--wiz-red);
+}
+
+.wiz-header__subtitle {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--wiz-gray-400);
+  letter-spacing: 1px;
+  margin-top: -2px;
+}
+
+.wiz-header__badge {
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.08);
+  color: var(--wiz-gray-300);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+
+/* ─── BUTTONS ─────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.btn:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Sizes */
+.btn--sm  { padding: 8px 16px;  font-size: 13px; border-radius: var(--radius-sm); }
+.btn--md  { padding: 12px 24px; font-size: 15px; border-radius: var(--radius-md); }
+.btn--lg  { padding: 16px 32px; font-size: 17px; border-radius: var(--radius-lg); }
+.btn--xl  { padding: 18px 40px; font-size: 18px; border-radius: var(--radius-lg); }
+
+/* Variants */
+.btn--primary {
+  background: linear-gradient(135deg, var(--wiz-red) 0%, var(--wiz-red-dark) 100%);
+  color: var(--wiz-white);
+  font-style: italic;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(231, 0, 34, 0.35);
+}
+.btn--primary:not(:disabled):hover {
+  background: linear-gradient(135deg, var(--wiz-red-light) 0%, var(--wiz-red) 100%);
+  box-shadow: 0 6px 20px rgba(231, 0, 34, 0.5);
+}
+
+.btn--secondary {
+  background: var(--wiz-navy);
+  color: var(--wiz-white);
+  box-shadow: 0 4px 12px rgba(2, 17, 103, 0.3);
+}
+.btn--secondary:not(:disabled):hover {
+  background: var(--wiz-navy-light);
+}
+
+.btn--success {
+  background: var(--wiz-success);
+  color: var(--wiz-white);
+}
+
+.btn--danger {
+  background: var(--wiz-error);
+  color: var(--wiz-white);
+}
+.btn--ghost     { background: transparent;        color: var(--wiz-gray-600); }
+.btn--full      { width: 100%; }
+
+.btn--outline {
+  background: transparent;
+  color: var(--wiz-navy);
+  border: 2px solid var(--wiz-gray-200);
+}
+.btn--outline:hover {
+  border-color: var(--wiz-orange);
+  color: var(--wiz-orange);
+}
+
+
+/* ─── CARDS ───────────────────────────────────────── */
+.card {
+  background: var(--wiz-white);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--wiz-gray-100);
+  transition: box-shadow var(--transition-normal);
+}
+
+.card--glow {
+  border-color: var(--wiz-orange);
+  box-shadow: var(--shadow-glow);
+}
+
+.card--dark {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.card__title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--wiz-navy);
+  margin-bottom: 16px;
+}
+
+
+/* ─── BADGE / TAG ─────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge--orange  { background: rgba(243,112,33,0.12); color: var(--wiz-orange); }
+.badge--navy    { background: rgba(26,43,74,0.10);   color: var(--wiz-navy); }
+.badge--success { background: var(--wiz-success-bg);  color: var(--wiz-success); }
+.badge--error   { background: var(--wiz-error-bg);    color: var(--wiz-error); }
+.badge--gray    { background: var(--wiz-gray-100);    color: var(--wiz-gray-400); }
+
+
+/* ─── INPUTS & TEXTAREAS ──────────────────────────── */
+button, input, textarea, select, a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--wiz-gray-200);
+  font-family: var(--font-body);
+  font-size: 16px; /* 16px impede o zoom automático indesejado no iOS Safari */
+  color: var(--wiz-gray-800);
+  background: var(--wiz-white);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input:focus {
+  border-color: var(--wiz-orange);
+  box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.15);
+}
+
+.input::placeholder {
+  color: var(--wiz-gray-400);
+}
+
+.input--textarea {
+  min-height: 76px;
+  resize: vertical;
+  line-height: 1.5;
+  padding: 12px 14px;
+}
+
+.input--error {
+  border-color: var(--wiz-error);
+  background: var(--wiz-error-bg);
+}
+
+
+/* ─── TOGGLE SWITCH (Verdade/Mentira) ─────────────── */
+.toggle-group {
+  display: flex;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid var(--wiz-gray-200);
+}
+
+.toggle-group__option {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: var(--wiz-white);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.toggle-group__option:first-child {
+  border-right: 1px solid var(--wiz-gray-200);
+}
+
+.toggle-group__option--active-truth {
+  background: var(--wiz-success);
+  color: var(--wiz-white);
+}
+
+.toggle-group__option--active-lie {
+  background: var(--wiz-error);
+  color: var(--wiz-white);
+}
+
+
+/* ─── PROGRESS BAR ────────────────────────────────── */
+.progress {
+  width: 100%;
+  height: 12px;
+  background: var(--wiz-gray-100);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.5s ease;
+  background: linear-gradient(90deg, var(--wiz-orange), var(--wiz-orange-light));
+}
+
+.progress__fill--success {
+  background: linear-gradient(90deg, var(--wiz-success), #2ecc71);
+}
+
+
+/* ─── PLAYER CARD (card de frases do aluno) ────────── */
+.player-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--wiz-gray-200);
+  transition: all var(--transition-normal);
+  background: var(--wiz-white);
+}
+
+.player-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.player-card--highlight {
+  border-color: var(--wiz-orange);
+  box-shadow: var(--shadow-glow);
+}
+
+.player-card--done {
+  border-color: var(--wiz-success);
+  opacity: 0.85;
+}
+
+.player-card__header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--wiz-white);
+}
+
+.player-card__emoji {
+  font-size: 24px;
+}
+
+.player-card__body {
+  padding: 12px 16px;
+}
+
+.player-card__statement {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--wiz-off-white);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.player-card__statement:last-child {
+  margin-bottom: 0;
+}
+
+.player-card__statement-number {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+  color: var(--wiz-white);
+}
+
+.player-card__statement-text {
+  flex: 1;
+  color: var(--wiz-gray-800);
+}
+
+/* Evaluation state indicators */
+.player-card__statement--truth {
+  background: var(--wiz-success-bg);
+  border-left: 3px solid var(--wiz-success);
+}
+
+.player-card__statement--lie {
+  background: var(--wiz-error-bg);
+  border-left: 3px solid var(--wiz-error);
+}
+
+
+/* ─── KANBAN COLUMNS ──────────────────────────────── */
+.kanban {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+  .kanban {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kanban__column {
+  min-height: 200px;
+}
+
+.kanban__column-header {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kanban__column-header--pending {
+  background: var(--wiz-warning-bg);
+  color: var(--wiz-warning);
+}
+
+.kanban__column-header--done {
+  background: var(--wiz-success-bg);
+  color: var(--wiz-success);
+}
+
+
+/* ─── AVATAR PICKER ───────────────────────────────── */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .avatar-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.avatar-grid__item {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--wiz-gray-200);
+  background: var(--wiz-white);
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.avatar-grid__item:hover {
+  border-color: var(--wiz-orange);
+  transform: scale(1.1);
+}
+
+.avatar-grid__item--selected {
+  border-color: var(--wiz-orange);
+  background: var(--wiz-orange-pale);
+  box-shadow: var(--shadow-glow);
+}
+
+.avatar-grid__item--taken {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+
+/* ─── PODIUM ──────────────────────────────────────── */
+.podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 40px 0;
+}
+
+.podium__place {
+  text-align: center;
+}
+
+.podium__bar {
+  width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-md);
+}
+
+.podium__bar--1st {
+  height: 200px;
+  background: linear-gradient(180deg, var(--wiz-orange), var(--wiz-flame));
+  box-shadow: var(--shadow-glow);
+}
+
+.podium__bar--2nd {
+  height: 160px;
+  background: linear-gradient(180deg, var(--wiz-navy-light), var(--wiz-navy));
+}
+
+.podium__bar--3rd {
+  height: 130px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.podium__score {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--wiz-white);
+}
+
+.podium__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--wiz-white);
+  margin-bottom: 8px;
+}
+
+.podium__emoji {
+  margin-bottom: 8px;
+}
+
+
+/* ─── ANIMATIONS ──────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bounceIn {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.anim-fade-in     { animation: fadeIn 0.3s ease; }
+.anim-fade-in-up  { animation: fadeInUp 0.4s ease; }
+.anim-slide-in    { animation: slideIn 0.3s ease; }
+.anim-bounce-in   { animation: bounceIn 0.5s ease; }
+.anim-pulse       { animation: pulse 2s ease-in-out infinite; }
+
+
+/* ─── UTILITIES ───────────────────────────────────── */
+.text-center { text-align: center; }
+.text-left   { text-align: left; }
+.text-right  { text-align: right; }
+
+.mt-0  { margin-top: 0; }
+.mt-1  { margin-top: 8px; }
+.mt-2  { margin-top: 16px; }
+.mt-3  { margin-top: 24px; }
+.mt-4  { margin-top: 32px; }
+.mb-0  { margin-bottom: 0; }
+.mb-1  { margin-bottom: 8px; }
+.mb-2  { margin-bottom: 16px; }
+.mb-3  { margin-bottom: 24px; }
+.mb-4  { margin-bottom: 32px; }
+
+.flex         { display: flex; }
+.flex-col     { flex-direction: column; }
+.flex-wrap    { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-1 { gap: 8px; }
+.gap-2 { gap: 12px; }
+.gap-3 { gap: 16px; }
+
+.w-full { width: 100%; }
+
+/* Scrollbar custom */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--wiz-gray-200);
+  border-radius: 3px;
+}

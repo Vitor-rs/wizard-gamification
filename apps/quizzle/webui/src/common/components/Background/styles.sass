@@ -1,0 +1,107 @@
+@use "@/common/styles/colors" as *
+
+.background-container
+  position: fixed
+  top: 0
+  left: 0
+  width: 100vw
+  height: 100vh
+  overflow: hidden
+  z-index: -1
+  pointer-events: none
+
+.background-container.host-bg
+  background-color: $primary
+
+  .host-bg-image
+    position: absolute
+    inset: 0
+    background-size: cover
+    background-position: center
+    background-repeat: no-repeat
+    transition: background-image 0.35s ease
+
+  .host-bg-overlay
+    position: absolute
+    inset: 0
+    background: linear-gradient(180deg, color-mix(in srgb, #{$primary} 25%, transparent) 0%, color-mix(in srgb, #{$primary} 45%, transparent) 100%)
+
+.circle-tl
+  position: fixed
+  top: -25rem
+  left: -25rem
+  width: 30rem
+  height: 30rem
+  background: linear-gradient(135deg, #E70022 0%, #EB334F 50%, #F0667B 100%)
+  border-radius: 100%
+  transform: rotate(55deg)
+  box-shadow: inset 0 4px 12px rgba(255, 255, 255, 0.25), 0 0 60px rgba(231, 0, 34, 0.3)
+  filter: blur(1px)
+
+.rect-br
+  position: fixed
+  bottom: -25rem
+  right: -25rem
+  width: 25rem
+  height: 25rem
+  background: linear-gradient(135deg, #021167 0%, #1A2885 50%, #364085 100%)
+  border-radius: 1rem
+  transform: rotate(55deg)
+  box-shadow: inset 0 4px 12px rgba(255, 255, 255, 0.2), 0 0 50px rgba(2, 17, 103, 0.35)
+  filter: blur(1px)
+
+.accent-circle-1
+  position: fixed
+  top: 20%
+  right: 15%
+  width: 8rem
+  height: 8rem
+  background: radial-gradient(circle, rgba(0, 166, 237, 0.4) 0%, rgba(0, 166, 237, 0.15) 50%, transparent 100%)
+  border-radius: 100%
+  filter: blur(20px)
+
+.accent-circle-2
+  position: fixed
+  bottom: 25%
+  left: 10%
+  width: 12rem
+  height: 12rem
+  background: radial-gradient(circle, rgba(255, 186, 0, 0.35) 0%, rgba(255, 186, 0, 0.12) 50%, transparent 100%)
+  border-radius: 100%
+  filter: blur(30px)
+
+.dancing-diamond
+  position: fixed
+  top: 60%
+  right: 25%
+  width: 3rem
+  height: 3rem
+  background: rgba(0, 166, 237, 0.25)
+  transform: rotate(45deg)
+  border-radius: 0.4rem
+  filter: blur(2px)
+
+@media (max-width: 768px)
+  .circle-tl
+    width: 20rem
+    height: 20rem
+    top: -15rem
+    left: -15rem
+
+  .rect-br
+    width: 18rem
+    height: 18rem
+    bottom: -15rem
+    right: -15rem
+
+  .accent-circle-1
+    width: 6rem
+    height: 6rem
+
+  .accent-circle-2
+    width: 8rem
+    height: 8rem
+
+@media (max-width: 480px)
+  .accent-circle-1, .accent-circle-2, .dancing-diamond
+    display: none

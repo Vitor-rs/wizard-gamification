@@ -1,0 +1,115 @@
+import os from 'node:os'
+import { allThemesCss } from '@doot-games/themes'
+
+function detectLanUrl(port = 4000) {
+  if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL
+  if (process.env.DOOT_HOST_URL) return process.env.DOOT_HOST_URL
+  const nets = os.networkInterfaces()
+  const list: { address: string; score: number }[] = []
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] || []) {
+      if (net.family === 'IPv4' && !net.internal && net.address !== '127.0.0.1') {
+        const isVirtual = /vethernet|virtual|vmware|hyper-v|pseudo|loopback|docker|wsl|tap|wg|tunnel/i.test(name)
+        const isWifi = /wi-fi|wifi|wireless|wlan/i.test(name)
+        const isEthernet = /ethernet|eth|lan/i.test(name)
+        const score =
+          (isVirtual ? -100 : 0) +
+          (isWifi ? 50 : 0) +
+          (isEthernet ? 40 : 0) +
+          (net.address.startsWith('192.168.') ? 20 : 0) +
+          (net.address.startsWith('10.') ? 15 : 0)
+        list.push({ address: net.address, score })
+      }
+    }
+  }
+  list.sort((a, b) => b.score - a.score)
+  const ip = list[0]?.address || 'localhost'
+  return `http://${ip}:${port}`
+}
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: '2025-01-01',
+  future: { compatibilityVersion: 4 },
+  devtools: { enabled: false },
+
+  // `/dev/*` are visual-QA showcases (the controller kit, the results gallery), not
+  // product surfaces. Drop their ROUTES from the production build so they neither
+  // publish a page on doot.games nor pull the whole game registry into a client chunk.
+  // (`ignore` globs did not exclude them; removing the routes here does.) `nuxi build`
+  // sets NODE_ENV=production itself before this runs, so it fires in CI/Docker even
+  // though the Dockerfile only sets NODE_ENV in its RUNTIME stage. Verifiable:
+  // `nuxi build` then grep .output/server for "/dev/" (must be empty), and `nuxi dev`
+  // must still serve /dev/results.
+  hooks: {
+    'pages:extend'(pages) {
+      if (process.env.NODE_ENV !== 'production') return
+      for (let i = pages.length - 1; i >= 0; i--) {
+        if (pages[i]?.path.startsWith('/dev')) pages.splice(i, 1)
+      }
+    },
+  },
+
+
+  // Workspace packages ship TypeScript/SFC source; let Nuxt transpile them.
+  build: {
+    transpile: [
+      '@doot-games/engine',
+      '@doot-games/sdk',
+      '@doot-games/ui',
+      '@doot-games/games',
+      '@doot-games/themes',
+    ],
+  },
+
+  css: ['@doot-games/themes/base.css', '@doot-games/ui/styles.css'],
+
+  app: {
+    head: {
+      title: 'Doot, put a game on the big screen',
+      htmlAttrs: { 'data-theme': 'doot', lang: 'pt-BR' },
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        {
+          name: 'description',
+          content:
+            'Self-hostable live party games. Host on a screen, everyone joins from their phone.',
+        },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Figtree:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Creepster&family=Nosifer&family=Special+Elite&family=VT323&display=swap',
+        },
+      ],
+      // Inject the generated theme tokens server-side so there is no FOUC.
+      style: [{ id: 'doot-theme-vars', innerHTML: allThemesCss() }],
+    },
+  },
+
+  runtimeConfig: {
+    public: {
+      relayUrl: process.env.CLASP_RELAY_URL || 'wss://relay.clasp.to',
+      baseUrl: process.env.PUBLIC_BASE_URL || '',
+      lanUrl: detectLanUrl(Number(process.env.PORT) || 4000),
+      // Origin of the self-hosted GoatCounter instance (e.g. https://stats.doot.games).
+      // Empty = analytics off, so the tracking script is never loaded. Set at
+      // RUNTIME via NUXT_PUBLIC_GOATCOUNTER_URL (Nuxt's public-runtimeConfig env
+      // convention; a plain build-time GOATCOUNTER_URL is the fallback default).
+      // See plugins/analytics.client.ts and docs/deploy.md.
+      goatcounterUrl: process.env.GOATCOUNTER_URL || '',
+      // Optional TURN relay for the Retro Arcade spectator stream (WebRTC), for
+      // viewers behind NATs that STUN can't traverse. CLASP is signaling-only, so
+      // TURN is a SEPARATE server (e.g. coturn). Empty = STUN-only (the default).
+      // Set at RUNTIME via NUXT_PUBLIC_TURN_URL / _TURN_USERNAME / _TURN_CREDENTIAL
+      // (url may be a comma-separated list). See plugins/rtc.client.ts + docs/deploy.md.
+      turnUrl: process.env.TURN_URL || '',
+      turnUsername: process.env.TURN_USERNAME || '',
+      turnCredential: process.env.TURN_CREDENTIAL || '',
+    },
+  },
+})

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Display — Two Truths & A Lie | Wizard Games</title>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/wizard-ds.css">
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 0%, #0E1A4E 0%, var(--wiz-navy-dark) 70%, #020617 100%);
+      color: var(--wiz-white);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .display-container {
+      min-height: calc(100vh - 70px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 32px 24px 60px;
+    }
+
+    /* ─── HEADINGS & HERO (DISPLAY PROJETOR) ───────── */
+    h1, h2, h3, h4 {
+      color: #FFFFFF;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 6px;
+      color: #FFFFFF !important;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .hero-title span {
+      color: #FF3B5C !important; /* Vermelho mais claro e vibrante para o & */
+      text-shadow: 0 0 25px rgba(255, 59, 92, 0.65);
+    }
+    .hero-subtitle {
+      font-family: var(--font-body);
+      font-size: clamp(16px, 2vw, 22px);
+      color: var(--wiz-gray-300);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .lobby-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-xl);
+      padding: 36px 40px;
+      max-width: 680px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(10px);
+    }
+    .lobby-qr img {
+      width: 240px;
+      height: 240px;
+      border-radius: var(--radius-lg);
+      border: 4px solid var(--wiz-orange);
+      box-shadow: var(--shadow-glow);
+      background: #fff;
+    }
+    .lobby-qr__url {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--wiz-orange-light);
+      margin-top: 14px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    /* Player pills */
+    .player-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .player-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 22px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--wiz-white);
+      box-shadow: var(--shadow-sm);
+      animation: bounceIn 0.4s ease;
+    }
+
+    /* ─── GRID DE CARDS DOS ALUNOS ──────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+      margin-top: 28px;
+    }
+    .display-card {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: var(--shadow-md);
+      animation: fadeInUp 0.4s ease;
+      backdrop-filter: blur(6px);
+    }
+    .display-card__header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .display-card__name {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--wiz-white);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .display-card__body {
+      padding: 14px 16px;
+    }
+    .display-card__stmt {
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.45;
+      background: rgba(255, 255, 255, 0.08);
+      word-break: break-word;
+    }
+    .display-card__stmt:last-child { margin-bottom: 0; }
+    .display-card__stmt-num {
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 12px;
+      flex-shrink: 0; color: #fff;
+    }
+
+    /* Revelação de Verdades/Mentiras no Projetor */
+    .stmt-revealed--truth {
+      background: rgba(39, 174, 96, 0.25) !important;
+      border-left: 4px solid var(--wiz-success);
+    }
+    .stmt-revealed--lie {
+      background: rgba(231, 76, 60, 0.3) !important;
+      border-left: 4px solid var(--wiz-error);
+    }
+
+    /* Pódio dos Vencedores */
+    .podium-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 24px;
+      margin: 40px 0 24px;
+      width: 100%;
+      max-width: 720px;
+    }
+    .podium-place {
+      text-align: center;
+      flex: 1;
+    }
+    .podium-bar {
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Card header colors */
+    .card-color-0  { background: linear-gradient(135deg, #E70022, #B5001A); }
+    .card-color-1  { background: linear-gradient(135deg, #1A2E7B, #021167); }
+    .card-color-2  { background: linear-gradient(135deg, #00911C, #1e8449); }
+    .card-color-3  { background: linear-gradient(135deg, #9B59B6, #7D3C98); }
+    .card-color-4  { background: linear-gradient(135deg, #FFBA00, #D68910); }
+    .card-color-5  { background: linear-gradient(135deg, #00A6ED, #0984E3); }
+    .card-color-6  { background: linear-gradient(135deg, #E67E22, #D35400); }
+    .card-color-7  { background: linear-gradient(135deg, #1ABC9C, #17A589); }
+    .card-color-8  { background: linear-gradient(135deg, #E91E63, #C2185B); }
+    .card-color-9  { background: linear-gradient(135deg, #00BCD4, #0097A7); }
+    .card-color-10 { background: linear-gradient(135deg, #8BC34A, #689F38); }
+    .card-color-11 { background: linear-gradient(135deg, #FF5722, #E64A19); }
+
+    .bg-color-0  { background: #E70022; }
+    .bg-color-1  { background: #021167; }
+    .bg-color-2  { background: #27AE60; }
+    .bg-color-3  { background: #9B59B6; }
+    .bg-color-4  { background: #E74C3C; }
+    .bg-color-5  { background: #2980B9; }
+    .bg-color-6  { background: #F39C12; }
+    .bg-color-7  { background: #1ABC9C; }
+    .bg-color-8  { background: #E91E63; }
+    .bg-color-9  { background: #00BCD4; }
+    .bg-color-10 { background: #8BC34A; }
+    .bg-color-11 { background: #FF5722; }
+
+    /* Fullscreen UI states & Toast */
+    .fs-toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(5, 8, 30, 0.95);
+      border: 2px solid var(--wiz-red);
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 9999px;
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 8px 30px rgba(231, 0, 34, 0.5);
+      z-index: 1000;
+      display: none;
+      pointer-events: none;
+      letter-spacing: 0.5px;
+      font-family: var(--font-display);
+      text-align: center;
+    }
+    :fullscreen .hero-title,
+    :-webkit-full-screen .hero-title,
+    body.is-fullscreen .hero-title {
+      font-size: clamp(48px, 6.5vw, 76px);
+    }
+    :fullscreen .lobby-qr img,
+    :-webkit-full-screen .lobby-qr img,
+    body.is-fullscreen .lobby-qr img {
+      width: 280px;
+      height: 280px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="wiz-header">
+    <div class="wiz-header__logo">
+      <img src="/static/img/wizard-logo-white.svg" alt="Wizard by Pearson" class="wiz-logo-img">
+      <div style="border-left: 1px solid rgba(255,255,255,0.2); padding-left: 12px; margin-left: 4px;">
+        <div class="wiz-header__title" style="color:#FFFFFF">TWO TRUTHS <span style="color:#FF3B5C;">&amp;</span> A LIE</div>
+        <div class="wiz-header__subtitle">TELA DO PROJETOR • CLASSROOM EXPERIENCE</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button id="btnFullscreen" class="btn btn--outline btn--sm" style="color:#fff;border-color:rgba(255,255,255,0.4)" onclick="toggleFullScreen()">
+        ⛶ Tela Cheia
+      </button>
+      <div id="displayStatus" class="badge badge--success">● Conectado</div>
+    </div>
+  </header>
+
+  <main class="display-container" id="app">
+    <div class="text-center mt-4">
+      <div style="font-size:52px" class="anim-pulse">⏳</div>
+      <p style="color:var(--wiz-gray-400);margin-top:16px;font-size:18px">Conectando ao projetor...</p>
+    </div>
+  </main>
+
+  <script>
+    const HOST = (window.location.hostname && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") ? window.location.hostname : "{{ host }}";
+    const PORT = window.location.port || "{{ port }}";
+    const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const WS_URL = `${wsProto}//${window.location.host}/ws/display`;
+
+    let ws = null;
+    let pingInterval = null;
+    let gameState = null;
+
+    function connectWS() {
+      ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        const badge = document.getElementById("displayStatus");
+        if (badge) { badge.className = "badge badge--success"; badge.textContent = "● Conectado"; }
+        startHeartbeat();
+      };
+
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "pong") return;
+          if (msg.type === "game_state") {
+            gameState = msg.data;
+            render();
+          }
+        } catch(err) {}
+      };
+
+      ws.onclose = () => {
+        clearInterval(pingInterval);
+        const badge = document.getElementById("displayStatus");
+        if (badge) { badge.className = "badge badge--error"; badge.textContent = "● Reconectando"; }
+        setTimeout(connectWS, 1500);
+      };
+
+      ws.onerror = () => ws.close();
+    }
+
+    function startHeartbeat() {
+      clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ action: "ping" }));
+        }
+      }, 8000);
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+      if (!gameState || !app) return;
+
+      switch (gameState.phase) {
+        case "lobby":      app.innerHTML = renderLobby(); break;
+        case "submitting":  app.innerHTML = renderSubmitting(); break;
+        case "evaluating":  app.innerHTML = renderEvaluating(); break;
+        case "results":    app.innerHTML = renderResults(); break;
+      }
+    }
+
+    function getColorIndex(playerId) {
+      if (!gameState || !Array.isArray(gameState.join_order)) return 0;
+      const idx = gameState.join_order.indexOf(playerId);
+      return idx >= 0 ? idx % 12 : 0;
+    }
+
+    // ─── 1. LOBBY VIEW ──────────────────────────────────────
+    function renderLobby() {
+      const players = Object.values(gameState.players || {});
+      const studentUrl = `http://${HOST}:${PORT}/student`;
+
+      return `
+        <h1 class="hero-title">
+          TWO TRUTHS <span>&</span> A LIE
+        </h1>
+        <p class="hero-subtitle">Duas Verdades e Uma Mentira — Detector de Mentiras</p>
+
+        <div class="lobby-box">
+          <p style="color:var(--wiz-orange-light);font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:20px">
+            📱 Aponte a câmera do celular para entrar na sala:
+          </p>
+          <div class="lobby-qr">
+            <img src="/qr?ip=${encodeURIComponent(HOST)}" alt="QR Code">
+            <div class="lobby-qr__url">${studentUrl}</div>
+          </div>
+
+          <div style="margin-top:28px">
+            <p style="color:var(--wiz-gray-400);font-size:16px;margin-bottom:12px;font-weight:600">
+              Alunos Conectados (${players.length}):
+            </p>
+            <div class="player-pills">
+              ${players.map(p => `
+                <div class="player-pill bg-color-${getColorIndex(p.id)}">
+                  <span style="font-size:22px">${p.emoji}</span>
+                  ${escapeHtml(p.name)}
+                </div>
+              `).join("")}
+              ${players.length === 0 ? '<p style="color:var(--wiz-gray-400);font-size:15px">Escaneie o código acima para começar...</p>' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ─── 2. SUBMITTING VIEW ─────────────────────────────────
+    function renderSubmitting() {
+      const players = Object.values(gameState.players || {});
+      const submitted = players.filter(p => p.has_submitted);
+      const total = players.length;
+
+      return `
+        <div style="text-align:center;width:100%;max-width:1100px">
+          <div style="font-size:52px;margin-bottom:8px">✍️</div>
+          <h2 style="font-family:var(--font-display);font-size:36px;margin-bottom:6px">
+            Escrevam suas 3 frases no celular!
+          </h2>
+          <p style="color:var(--wiz-orange-light);font-size:20px;margin-bottom:6px;font-weight:600">
+            2 verdades e 1 mentira sobre você
+          </p>
+          <p style="color:var(--wiz-gray-400);font-size:18px;margin-bottom:24px">
+            ${submitted.length} de ${total} alunos já enviaram
+          </p>
+
+          <div class="progress" style="max-width:600px;margin:0 auto 32px;height:14px">
+            <div class="progress__fill" style="width:${total>0?(submitted.length/total)*100:0}%"></div>
+          </div>
+
+          <div class="cards-grid">
+            ${players.map(p => `
+              <div class="display-card" style="border-left:4px solid ${p.has_submitted?'#27ae60':'var(--wiz-orange)'}">
+                <div class="display-card__header card-color-${getColorIndex(p.id)}">
+                  <span style="font-size:24px">${p.emoji}</span>
+                  <span class="display-card__name">${escapeHtml(p.name)}</span>
+                  <span class="badge ${p.has_submitted?'badge--success':'badge--orange'}">
+                    ${p.has_submitted ? '✓ Enviado' : '⏳ Escrevendo'}
+                  </span>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    // ─── 3. EVALUATING VIEW ─────────────────────────────────
+    function renderEvaluating() {
+      const players = Object.values(gameState.players || {});
+      const done = gameState.evaluations_count;
+      const total = gameState.player_count;
+
+      return `
+        <div style="text-align:center;width:100%;max-width:1100px">
+          <div style="font-size:52px;margin-bottom:8px">🕵️</div>
+          <h2 style="font-family:var(--font-display);font-size:36px;margin-bottom:6px">
+            Detector de Mentiras em Andamento!
+          </h2>
+          <p style="color:var(--wiz-orange-light);font-size:20px;margin-bottom:16px;font-weight:600">
+            Analise as frases dos colegas e descubra a mentira
+          </p>
+
+          <div style="max-width:500px;margin:0 auto 32px">
+            <div class="progress" style="height:14px">
+              <div class="progress__fill progress__fill--success" style="width:${total>0?(done/total)*100:0}%"></div>
+            </div>
+            <p style="margin-top:10px;font-size:16px;color:var(--wiz-gray-400);font-weight:600">
+              ${done} de ${total} alunos finalizaram as avaliações
+            </p>
+          </div>
+
+          <!-- Cards de todos os colegas para visualização na sala -->
+          <div class="cards-grid">
+            ${players.filter(p => p.has_submitted).map(p => renderDisplayCard(p, false)).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    // ─── 4. RESULTS VIEW ────────────────────────────────────
+    function renderResults() {
+      const rankings = gameState.rankings || [];
+      const players = gameState.players || {};
+      const podium = rankings.slice(0, 3);
+
+      // Pódio inteligente: 3+ alunos (olímpico 2º, 1º, 3º); 1 ou 2 alunos (1º, 2º)
+      let podiumSpots = [];
+      if (podium.length >= 3) {
+        podiumSpots = [
+          { player: podium[1], medal: "🥈 2º Lugar", height: 180, bg: "linear-gradient(180deg, var(--wiz-navy-light), var(--wiz-navy))", glow: false },
+          { player: podium[0], medal: "🥇 1º Lugar", height: 230, bg: "linear-gradient(180deg, var(--wiz-orange), var(--wiz-flame))", glow: true },
+          { player: podium[2], medal: "🥉 3º Lugar", height: 140, bg: "rgba(255,255,255,0.08)", glow: false },
+        ];
+      } else if (podium.length === 2) {
+        podiumSpots = [
+          { player: podium[0], medal: "🥇 1º Lugar", height: 230, bg: "linear-gradient(180deg, var(--wiz-orange), var(--wiz-flame))", glow: true },
+          { player: podium[1], medal: "🥈 2º Lugar", height: 180, bg: "linear-gradient(180deg, var(--wiz-navy-light), var(--wiz-navy))", glow: false },
+        ];
+      } else if (podium.length === 1) {
+        podiumSpots = [
+          { player: podium[0], medal: "🥇 1º Lugar", height: 230, bg: "linear-gradient(180deg, var(--wiz-orange), var(--wiz-flame))", glow: true },
+        ];
+      }
+
+      return `
+        <div style="text-align:center;width:100%;max-width:1100px">
+          <div style="font-size:64px;margin-bottom:6px" class="anim-bounce-in">🏆</div>
+          <h1 class="hero-title" style="font-size:48px;margin-bottom:4px">
+            PLACAR <span>FINAL</span>
+          </h1>
+          <p style="color:var(--wiz-gray-400);font-size:18px;margin-bottom:20px">
+            Quem foram os melhores Detectores de Mentiras da turma?
+          </p>
+
+          <!-- Pódio -->
+          <div class="podium-container">
+            ${podiumSpots.map((spot, i) => {
+              const p = spot.player;
+              if (!p) return '';
+              return `
+                <div class="podium-place anim-fade-in-up" style="animation-delay:${0.2 + i * 0.15}s">
+                  <div style="font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--wiz-orange-light);margin-bottom:6px">${spot.medal}</div>
+                  <div style="font-size:48px;margin-bottom:4px">${p.emoji}</div>
+                  <div style="font-family:var(--font-display);font-weight:800;font-size:18px;margin-bottom:10px">${escapeHtml(p.name)}</div>
+                  <div class="podium-bar" style="height:${spot.height}px;background:${spot.bg};${spot.glow?'box-shadow:var(--shadow-glow);':''}">
+                    <div style="font-family:var(--font-display);font-size:38px;font-weight:900">${p.score}</div>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+
+          <!-- Demais Colocações (4º em diante) -->
+          ${rankings.length > 3 ? `
+            <div style="width:100%;max-width:700px;margin:20px auto 0">
+              ${rankings.slice(3).map((p, i) => `
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 18px;margin-bottom:6px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.06)">
+                  <span style="font-family:var(--font-display);font-weight:800;width:30px;color:var(--wiz-gray-400)">#${i+4}</span>
+                  <span style="font-size:22px">${p.emoji}</span>
+                  <span style="flex:1;text-align:left;font-weight:600;font-size:15px">${escapeHtml(p.name)}</span>
+                  <span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--wiz-orange)">${p.score} pts</span>
+                </div>
+              `).join("")}
+            </div>
+          ` : ''}
+
+          <!-- Revelação de Quem Mentiu Sobre o Quê -->
+          <h3 style="font-family:var(--font-display);font-size:24px;margin-top:48px;margin-bottom:20px;color:var(--wiz-orange-light)">
+            🔍 Revelação: Quem mentiu sobre o quê?
+          </h3>
+          <div class="cards-grid">
+            ${Object.values(players).map(p => renderDisplayCard(p, true)).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDisplayCard(player, showReveal) {
+      const ci = getColorIndex(player.id);
+      const stmts = player.statements || [];
+
+      return `
+        <div class="display-card">
+          <div class="display-card__header card-color-${ci}">
+            <span style="font-size:24px">${player.emoji}</span>
+            <span class="display-card__name">${escapeHtml(player.name)}</span>
+          </div>
+          <div class="display-card__body">
+            ${stmts.map((s, i) => {
+              let extraClass = '';
+              let label = '';
+              if (showReveal && s.is_lie !== undefined) {
+                extraClass = s.is_lie ? 'stmt-revealed--lie' : 'stmt-revealed--truth';
+                label = s.is_lie
+                  ? '<div style="color:var(--wiz-error);font-size:11px;font-weight:800;letter-spacing:0.5px">🤥 MENTIRA</div>'
+                  : '<div style="color:var(--wiz-success);font-size:11px;font-weight:800;letter-spacing:0.5px">✓ VERDADE</div>';
+              }
+              return `
+                <div class="display-card__stmt ${extraClass}">
+                  <div class="display-card__stmt-num bg-color-${ci}">
+                    ${String.fromCharCode(65 + i)}
+                  </div>
+                  <div style="flex:1">
+                    <div>${escapeHtml(s.text)}</div>
+                    ${label}
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function getFullscreenElement() {
+      return document.fullscreenElement ||
+             document.webkitFullscreenElement ||
+             document.mozFullScreenElement ||
+             document.msFullscreenElement || null;
+    }
+
+    async function toggleFullScreen() {
+      const docEl = document.documentElement;
+      const isFs = !!getFullscreenElement();
+
+      try {
+        if (!isFs) {
+          if (docEl.requestFullscreen) {
+            await docEl.requestFullscreen();
+          } else if (docEl.webkitRequestFullscreen) {
+            await docEl.webkitRequestFullscreen();
+          } else if (docEl.mozRequestFullScreen) {
+            await docEl.mozRequestFullScreen();
+          } else if (docEl.msRequestFullscreen) {
+            await docEl.msRequestFullscreen();
+          } else {
+            showToast("💡 Dica: Pressione F11 no teclado para tela cheia!");
+          }
+        } else {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            await document.webkitExitFullscreen();
+          } else if (document.mozCancelFullScreen) {
+            await document.mozCancelFullScreen();
+          } else if (document.msExitFullscreen) {
+            await document.msExitFullscreen();
+          }
+        }
+      } catch (err) {
+        console.warn("Fullscreen toggle warning:", err);
+        showToast("💡 Pressione F11 no teclado para tela cheia!");
+      }
+      updateFullscreenUI();
+    }
+
+    function updateFullscreenUI() {
+      const isFs = !!getFullscreenElement();
+      const btn = document.getElementById("btnFullscreen");
+      if (btn) {
+        btn.innerHTML = isFs ? "🗗 Sair da Tela Cheia" : "⛶ Tela Cheia";
+        btn.style.background = isFs ? "var(--wiz-red)" : "transparent";
+        btn.style.borderColor = isFs ? "var(--wiz-red)" : "rgba(255,255,255,0.4)";
+        btn.style.boxShadow = isFs ? "0 0 15px rgba(231, 0, 34, 0.5)" : "none";
+      }
+      document.body.classList.toggle("is-fullscreen", isFs);
+    }
+
+    ["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"].forEach(evt => {
+      document.addEventListener(evt, updateFullscreenUI);
+    });
+
+    // Atalho direto de teclado: 'F' ou 'F11'
+    document.addEventListener("keydown", (e) => {
+      if ((e.key === "f" || e.key === "F") && !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+        toggleFullScreen();
+      }
+    });
+
+    function showToast(msg) {
+      let t = document.getElementById("fsToast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "fsToast";
+        t.className = "fs-toast";
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.display = "block";
+      setTimeout(() => { if (t) t.style.display = "none"; }, 3500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    connectWS();
+  </script>
+</body>
+</html>

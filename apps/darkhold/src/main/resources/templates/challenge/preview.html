@@ -1,0 +1,229 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title th:text="#{challenge.preview.title}">Preview Challenge - Darkhold</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link href="/styles/darkhold-styles.css" rel="stylesheet" />
+    <link href="/styles/preview.css" rel="stylesheet" />
+    <link href="/styles/team-styles.css" rel="stylesheet" />
+    <script type="text/javascript" src="/scripts/theme-manager.js"></script>
+    <script type="text/javascript" src="/scripts/audio-manager.js"></script>
+    <script type="text/javascript" src="/scripts/language-manager.js"></script>
+    <script type="text/javascript" src="/scripts/accessibility.js"></script>
+    <script type="text/javascript" src="/scripts/common-scripts.js"></script>
+    <script type="text/javascript" src="/scripts/preview-scripts.js"></script>
+</head>
+<body>
+    <div th:insert="~{navbar :: navbar}"></div>
+
+    <main class="preview-page">
+        <div class="preview-container">
+            <form action="#" th:object="${previewInfo}" method="post">
+                <input type="hidden" th:value="${previewInfo.challengeId}" id="challengeId"/>
+                <input type="hidden" th:name="challenge_id" id="challenge_id"/>
+                <input type="hidden" name="team_mode" id="team_mode" value="false"/>
+                <input type="hidden" name="team_count" id="team_count" value="2"/>
+                <input type="hidden" name="assignment_method" id="assignment_method" value="BALANCED"/>
+                <input type="hidden" name="team_names" id="team_names" value=""/>
+
+                <!-- Page Header -->
+                <header class="preview-header">
+                    <h1 class="preview-title" th:text="${previewInfo.challengeName}">World Geography Quiz</h1>
+                    <p class="preview-subtitle">Review questions and select your game mode</p>
+                </header>
+
+                <!-- Questions Preview Section -->
+                <section class="questions-section">
+                    <div class="questions-header">
+                        <h2 class="questions-title">
+                            <div class="questions-title-icon">
+                                <i class="fas fa-list"></i>
+                            </div>
+                            <span>Questions Preview</span>
+                        </h2>
+                        <span class="questions-count-badge">
+                            <i class="fas fa-question-circle"></i>
+                            <span th:text="${#lists.size(previewInfo.questionSets)} + ' questions'">10 questions</span>
+                        </span>
+                    </div>
+
+                    <div class="question-accordion">
+                        <div th:each="ch : ${previewInfo.questionSets}" class="question-item">
+                            <div class="question-header" th:onclick="'toggleQuestion(' + ${chStat.index} + ')'">
+                                <span class="question-number" th:text="${chStat.index + 1}">1</span>
+                                <span class="question-text" th:text="${ch.question}">What is the capital of France?</span>
+                                <i class="fas fa-chevron-down question-toggle-icon"></i>
+                            </div>
+                            <div class="question-body" th:id="'question-body-' + ${chStat.index}">
+                                <div th:if="${ch.answer1 != null}"
+                                     th:class="${#strings.contains(ch.correctOptions, 'A')} ? 'answer-option correct' : 'answer-option'">
+                                    <span class="answer-label">A</span>
+                                    <span th:text="${ch.answer1}">Paris</span>
+                                </div>
+                                <div th:if="${ch.answer2 != null}"
+                                     th:class="${#strings.contains(ch.correctOptions, 'B')} ? 'answer-option correct' : 'answer-option'">
+                                    <span class="answer-label">B</span>
+                                    <span th:text="${ch.answer2}">London</span>
+                                </div>
+                                <div th:if="${ch.answer3 != null}"
+                                     th:class="${#strings.contains(ch.correctOptions, 'C')} ? 'answer-option correct' : 'answer-option'">
+                                    <span class="answer-label">C</span>
+                                    <span th:text="${ch.answer3}">Berlin</span>
+                                </div>
+                                <div th:if="${ch.answer4 != null}"
+                                     th:class="${#strings.contains(ch.correctOptions, 'D')} ? 'answer-option correct' : 'answer-option'">
+                                    <span class="answer-label">D</span>
+                                    <span th:text="${ch.answer4}">Madrid</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Game Mode Selection -->
+                <section class="game-modes-section">
+                    <h2 class="section-label" th:text="#{challenge.preview.selectGameMode}">Select Game Mode</h2>
+
+                    <div class="game-modes-grid">
+                        <!-- Multiplayer Mode -->
+                        <div class="mode-card" onclick="publish();">
+                            <div class="mode-icon">🎮</div>
+                            <h3 class="mode-title" th:text="#{challenge.preview.multiplayer}">Multiplayer</h3>
+                            <p class="mode-description" th:text="#{challenge.preview.multiplayerDesc}">
+                                Live game with PIN. Moderator controls pace. Real-time competition.
+                            </p>
+
+                            <!-- Team Mode Toggle -->
+                            <div class="team-toggle-section" onclick="event.stopPropagation();">
+                                <label class="team-toggle-label">
+                                    <input type="checkbox" id="teamModeCheckbox" onchange="toggleTeamConfig()">
+                                    <span th:text="#{challenge.preview.teamMode}">Team Mode</span>
+                                </label>
+
+                                <!-- Team Configuration Panel -->
+                                <div id="teamConfigPanel" class="team-config-panel" style="display:none;">
+                                    <div class="config-field">
+                                        <label class="config-label" th:text="#{challenge.preview.teams}">Teams:</label>
+                                        <select id="teamCountSelect" class="config-select" onchange="updateTeamCount()">
+                                            <option value="2">2 Teams</option>
+                                            <option value="3">3 Teams</option>
+                                            <option value="4">4 Teams</option>
+                                            <option value="5">5 Teams</option>
+                                            <option value="6">6 Teams</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="config-field">
+                                        <label class="config-label" th:text="#{challenge.preview.assignment}">Assignment:</label>
+                                        <select id="assignmentSelect" class="config-select" onchange="updateAssignment()">
+                                            <option value="BALANCED" th:text="#{challenge.preview.balanced}">Balanced</option>
+                                            <option value="RANDOM" th:text="#{challenge.preview.random}">Random</option>
+                                            <option value="MANUAL" th:text="#{challenge.preview.manual}">Manual</option>
+                                        </select>
+                                    </div>
+
+                                    <a href="#" class="custom-names-link" onclick="event.preventDefault(); toggleCustomNames();" id="customNamesToggle">
+                                        <span th:text="#{challenge.preview.customizeTeamNames}">+ Customize team names</span>
+                                    </a>
+
+                                    <!-- Custom Team Names -->
+                                    <div id="customNamesPanel" class="team-name-inputs" style="display:none;">
+                                        <div class="team-name-field">
+                                            <span class="team-color-dot" style="background: #ef4444;"></span>
+                                            <input type="text" class="config-select" id="teamName_red" placeholder="Team Red" maxlength="30">
+                                        </div>
+                                        <div class="team-name-field">
+                                            <span class="team-color-dot" style="background: #3b82f6;"></span>
+                                            <input type="text" class="config-select" id="teamName_blue" placeholder="Team Blue" maxlength="30">
+                                        </div>
+                                        <div class="team-name-field" id="teamName_green_row">
+                                            <span class="team-color-dot" style="background: #10b981;"></span>
+                                            <input type="text" class="config-select" id="teamName_green" placeholder="Team Green" maxlength="30">
+                                        </div>
+                                        <div class="team-name-field" id="teamName_yellow_row">
+                                            <span class="team-color-dot" style="background: #f59e0b;"></span>
+                                            <input type="text" class="config-select" id="teamName_yellow" placeholder="Team Yellow" maxlength="30">
+                                        </div>
+                                        <div class="team-name-field" id="teamName_purple_row">
+                                            <span class="team-color-dot" style="background: #a855f7;"></span>
+                                            <input type="text" class="config-select" id="teamName_purple" placeholder="Team Purple" maxlength="30">
+                                        </div>
+                                        <div class="team-name-field" id="teamName_orange_row">
+                                            <span class="team-color-dot" style="background: #f97316;"></span>
+                                            <input type="text" class="config-select" id="teamName_orange" placeholder="Team Orange" maxlength="30">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="mode-btn" th:text="#{challenge.preview.startMultiplayer}">
+                                Start Multiplayer
+                            </button>
+                        </div>
+
+                        <!-- Practice Mode -->
+                        <div class="mode-card" onclick="startPractice();">
+                            <div class="mode-icon">📝</div>
+                            <h3 class="mode-title" th:text="#{challenge.preview.practice}">Practice</h3>
+                            <p class="mode-description" th:text="#{challenge.preview.practiceDesc}">
+                                Solo mode with instant feedback. See correct answers immediately. No pressure.
+                            </p>
+                            <button type="button" class="mode-btn mode-btn--success" th:text="#{challenge.preview.startPractice}">
+                                Start Practice
+                            </button>
+                        </div>
+
+                        <!-- Self-Paced Mode (Coming Soon) -->
+                        <div class="mode-card disabled" th:title="#{challenge.preview.comingSoon}">
+                            <div class="mode-icon">📅</div>
+                            <h3 class="mode-title" th:text="#{challenge.preview.selfPaced}">Self-Paced</h3>
+                            <p class="mode-description" th:text="#{challenge.preview.selfPacedDesc}">
+                                Shareable link. Take anytime within window. Multiple attempts allowed.
+                            </p>
+                            <button type="button" class="mode-btn" disabled th:text="#{challenge.preview.comingSoon}">
+                                Coming Soon
+                            </button>
+                        </div>
+
+                        <!-- Challenge Mode (Coming Soon) -->
+                        <div class="mode-card disabled" th:title="#{challenge.preview.comingSoon}">
+                            <div class="mode-icon">🏆</div>
+                            <h3 class="mode-title" th:text="#{challenge.preview.challenge}">Challenge</h3>
+                            <p class="mode-description" th:text="#{challenge.preview.challengeDesc}">
+                                Persistent leaderboard. Best scores tracked. Competitive rankings.
+                            </p>
+                            <button type="button" class="mode-btn" disabled th:text="#{challenge.preview.comingSoon}">
+                                Coming Soon
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Back Button -->
+                <div class="back-button-section">
+                    <button type="button" class="btn-back" onclick="toChallenges();">
+                        <i class="fas fa-arrow-left"></i>
+                        <span th:text="#{challenge.preview.backToChallenges}">Back to Challenges</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script type="text/javascript" src="/scripts/core/popper.min.js"></script>
+    <script type="text/javascript" src="/scripts/core/bootstrap-5.3.1/bootstrap.min.js"></script>
+
+    <script>
+        // Toggle question expansion
+        function toggleQuestion(index) {
+            const item = document.querySelectorAll('.question-item')[index];
+            if (item) {
+                item.classList.toggle('expanded');
+            }
+        }
+    </script>
+</body>
+</html>

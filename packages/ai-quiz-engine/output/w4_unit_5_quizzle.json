@@ -1,0 +1,141 @@
+{
+  "title": "Wizard W4 - Unit 5: Airport Adventures & Present Perfect",
+  "settings": {
+    "description": "Wizard W4 Unit 5 - Level: Teens",
+    "difficulty": "medium",
+    "defaultTimer": 20,
+    "scoringMode": "time-based"
+  },
+  "questions": [
+    {
+      "title": "Choose the correct sentence: Have you checked your luggage ________?",
+      "type": "multiple-choice",
+      "timer": 20,
+      "pointMultiplier": "none",
+      "answers": [
+        {
+          "type": "text",
+          "content": "already",
+          "is_correct": false
+        },
+        {
+          "type": "text",
+          "content": "yet",
+          "is_correct": true
+        },
+        {
+          "type": "text",
+          "content": "just",
+          "is_correct": false
+        },
+        {
+          "type": "text",
+          "content": "since",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "title": "Which sentence is INCORRECT?",
+      "type": "multiple-choice",
+      "timer": 25,
+      "pointMultiplier": "none",
+      "answers": [
+        {
+          "type": "text",
+          "content": "I have just arrived at the airport.",
+          "is_correct": false
+        },
+        {
+          "type": "text",
+          "content": "The flight took off ten minutes ago.",
+          "is_correct": false
+        },
+        {
+          "type": "text",
+          "content": "I have lost my passport yesterday.",
+          "is_correct": true
+        },
+        {
+          "type": "text",
+          "content": "She has already printed her boarding pass.",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "title": "True or False: 'Carry-on luggage' means the bags you take with you inside the airplane cabin.",
+      "type": "true-false",
+      "timer": 15,
+      "pointMultiplier": "none",
+      "answers": [
+        {
+          "type": "text",
+          "content": "True",
+          "is_correct": true
+        },
+        {
+          "type": "text",
+          "content": "False",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "title": "Be careful at the airport door! 'PULL' means:",
+      "type": "multiple-choice",
+      "timer": 15,
+      "pointMultiplier": "none",
+      "answers": [
+        {
+          "type": "text",
+          "content": "Empurrar",
+          "is_correct": false
+        },
+        {
+          "type": "text",
+          "content": "Puxar",
+          "is_correct": true
+        },
+        {
+          "type": "text",
+          "content": "Pular",
+          "is_correct": false
+        },
+        {
+          "type": "text",
+          "content": "Apoiar",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "title": "Complete: 'Don't worry, the plane hasn't landed ________.'",
+      "type": "multiple-choice",
+      "timer": 20,
+      "pointMultiplier": "none",
+      "answers": [
+        {
+          "type": "text",
+          "content": "yet",
+          "is_correct": true
+        },
+        {
+          "type": "text",
+          "content": "already",
+          "is_correct": false
+        },
+        {
+          "type": "text",
+          "content": "still",
+          "is_correct": false
+        },
+        {
+          "type": "text",
+          "content": "ever",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+# Local development stack: the app, Postgres, and MinIO (an S3-compatible stand-in
+# for DigitalOcean Spaces). The relay is the public wss://relay.clasp.to, so no
+# relay service runs here.
+#
+# Note: in the current MVP the app only needs the relay to host and play. Postgres
+# and MinIO are wired up here ready for the auth, saved-games, and uploads work
+# (PRD phase one) so the local stack matches production from the start.
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - CLASP_RELAY_URL=wss://relay.clasp.to
+      - PUBLIC_BASE_URL=http://localhost:3000
+      # Persistence currently uses libSQL/SQLite; a postgres:// URL falls back to
+      # a local SQLite file (with a warning) until the Postgres driver is wired
+      # (see HANDOFF.md). The db service below is kept ready for that work.
+      - DATABASE_URL=postgres://doot:doot@db:5432/doot
+      - SPACES_ENDPOINT=http://minio:9000
+      - SPACES_REGION=us-east-1
+      - SPACES_BUCKET=doot
+      - SPACES_KEY=minioadmin
+      - SPACES_SECRET=minioadmin
+      # Cover IMAGES are read directly by the browser via <img>, so their public URL
+      # must point at the host-published MinIO port (not the internal minio host).
+      # Ephemeral play blobs are private and proxied through the app, so they need
+      # no browser-reachable storage URL.
+      - SPACES_PUBLIC_URL=http://localhost:9000/doot
+      - SESSION_PASSWORD=dev-only-change-me-please-32-chars
+    depends_on:
+      - db
+      - minio
+      - minio-setup
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=doot
+      - POSTGRES_PASSWORD=doot
+      - POSTGRES_DB=doot
+    ports:
+      - '5432:5432'
+    volumes:
+      - doot-pgdata:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - doot-minio:/data
+
+  # One-shot: create the bucket and make ONLY the cover-image prefix anonymously
+  # downloadable (images load via <img>). Ephemeral play blobs stay PRIVATE (the app
+  # reads them with a signed GET) and backups/ stays private. Mirrors the existing
+  # DigitalOcean Spaces setup, so no new bucket config is needed in prod. The app's
+  # lifecycle plugin adds the ephemeral-expiry rule at startup.
+  minio-setup:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin; do echo 'waiting for minio'; sleep 1; done;
+      mc mb --ignore-existing local/doot;
+      mc anonymous set download local/doot/uploads;
+      echo 'minio bucket ready';
+      "
+
+volumes:
+  doot-pgdata:
+  doot-minio:

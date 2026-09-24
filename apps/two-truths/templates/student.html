@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#021167">
+  <title>Student — Two Truths & A Lie | Wizard Games</title>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/wizard-ds.css">
+  <style>
+    html, body {
+      overscroll-behavior-y: contain;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background: var(--wiz-off-white);
+      padding-bottom: calc(90px + env(safe-area-inset-bottom, 16px));
+      min-height: 100vh;
+    }
+    .student-container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* ─── STATUS BAR NO HEADER ──────────────────────── */
+    .net-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .net-status--online {
+      background: rgba(39, 174, 96, 0.2);
+      color: #2ecc71;
+    }
+    .net-status--offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    /* ─── JOIN SCREEN ───────────────────────────────── */
+    .join-screen {
+      min-height: calc(100vh - 140px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .join-logo {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--wiz-orange), var(--wiz-flame));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px; box-shadow: var(--shadow-glow);
+      margin-bottom: 16px;
+    }
+    .join-form {
+      width: 100%;
+      max-width: 380px;
+      margin-top: 20px;
+    }
+
+    /* ─── STATEMENT CARDS (SUBMISSION) ──────────────── */
+    .stmt-card {
+      border: 2px solid var(--wiz-gray-200);
+      border-radius: var(--radius-md);
+      background: var(--wiz-white);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .stmt-card--lie {
+      border-color: var(--wiz-error);
+      background: #FFF8F8;
+      box-shadow: 0 4px 14px rgba(231, 76, 60, 0.12);
+    }
+    .stmt-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .stmt-card__tag {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--wiz-navy);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .lie-badge-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      border: 2px solid var(--wiz-gray-200);
+      background: var(--wiz-white);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--wiz-gray-600);
+      transition: all 0.2s ease;
+    }
+    .lie-badge-btn--active {
+      border-color: var(--wiz-error);
+      background: var(--wiz-error);
+      color: var(--wiz-white);
+      box-shadow: 0 2px 8px rgba(231, 76, 60, 0.35);
+    }
+
+    /* ─── DETECTOR DE MENTIRAS (EVALUATION) ─────────── */
+    .classmate-card {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 16px;
+      border: 2px solid var(--wiz-gray-200);
+      background: var(--wiz-white);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+    .classmate-card--active {
+      border-color: var(--wiz-orange);
+      box-shadow: 0 4px 20px rgba(243, 112, 33, 0.2);
+    }
+    .classmate-card--done {
+      border-color: var(--wiz-success);
+    }
+    .classmate-card__header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .classmate-card__name {
+      flex: 1;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--wiz-white);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .classmate-card__body {
+      padding: 16px;
+    }
+    .eval-choice-btn {
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--wiz-gray-200);
+      background: var(--wiz-off-white);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--wiz-gray-800);
+    }
+    .eval-choice-btn:active {
+      transform: scale(0.99);
+    }
+    .eval-choice-btn--lie {
+      border-color: var(--wiz-error);
+      background: var(--wiz-error-bg);
+      color: var(--wiz-error);
+      box-shadow: 0 2px 10px rgba(231, 76, 60, 0.15);
+    }
+    .eval-choice-btn--truth {
+      border-color: var(--wiz-success);
+      background: var(--wiz-success-bg);
+      color: #1e8449;
+    }
+
+    /* ─── BOTTOM FIXED BAR ──────────────────────────── */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 12px));
+      background: var(--wiz-white);
+      border-top: 1px solid var(--wiz-gray-200);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+    }
+    .bottom-bar__inner {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    /* ─── RESULTS VIEW ──────────────────────────────── */
+    .my-result-badge {
+      background: linear-gradient(135deg, var(--wiz-orange-pale), #ffffff);
+      border: 2px solid var(--wiz-orange);
+      border-radius: var(--radius-xl);
+      padding: 24px 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Cores de cards dinâmicas */
+    .ch-0  { background: linear-gradient(135deg, #E70022, #B5001A); }
+    .ch-1  { background: linear-gradient(135deg, #1A2E7B, #021167); }
+    .ch-2  { background: linear-gradient(135deg, #00911C, #1e8449); }
+    .ch-3  { background: linear-gradient(135deg, #9B59B6, #7D3C98); }
+    .ch-4  { background: linear-gradient(135deg, #FFBA00, #D68910); }
+    .ch-5  { background: linear-gradient(135deg, #00A6ED, #0984E3); }
+    .ch-6  { background: linear-gradient(135deg, #E67E22, #D35400); }
+    .ch-7  { background: linear-gradient(135deg, #1ABC9C, #17A589); }
+    .ch-8  { background: linear-gradient(135deg, #E91E63, #C2185B); }
+    .ch-9  { background: linear-gradient(135deg, #00BCD4, #0097A7); }
+    .ch-10 { background: linear-gradient(135deg, #8BC34A, #689F38); }
+    .ch-11 { background: linear-gradient(135deg, #FF5722, #E64A19); }
+
+    .bg-c-0  { background:#E70022; color:#fff; }
+    .bg-c-1  { background:#021167; color:#fff; }
+    .bg-c-2  { background:#27AE60; color:#fff; }
+    .bg-c-3  { background:#9B59B6; color:#fff; }
+    .bg-c-4  { background:#E74C3C; color:#fff; }
+    .bg-c-5  { background:#2980B9; color:#fff; }
+    .bg-c-6  { background:#F39C12; color:#fff; }
+    .bg-c-7  { background:#1ABC9C; color:#fff; }
+    .bg-c-8  { background:#E91E63; color:#fff; }
+    .bg-c-9  { background:#00BCD4; color:#fff; }
+    .bg-c-10 { background:#8BC34A; color:#fff; }
+    .bg-c-11 { background:#FF5722; color:#fff; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER OFICIAL WIZARD -->
+  <header class="wiz-header">
+    <div class="wiz-header__logo">
+      <img src="/static/img/wizard-logo-white.svg" alt="Wizard by Pearson" class="wiz-logo-img" style="height:28px">
+      <div style="border-left: 1px solid rgba(255,255,255,0.2); padding-left: 10px; margin-left: 2px;">
+        <div class="wiz-header__title" style="font-size:15px">TWO TRUTHS &amp; A LIE</div>
+        <div class="wiz-header__subtitle">STUDENT CLIENT</div>
+      </div>
+    </div>
+    <div id="netStatusPill" class="net-status net-status--offline">
+      <span id="netStatusDot">●</span> <span id="netStatusText">Conectando</span>
+    </div>
+  </header>
+
+  <main class="student-container" id="app">
+    <!-- Renderizado via JavaScript dinâmico sem destruição de input -->
+  </main>
+
+  <script>
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // SOM / ÁUDIO WEB SYNTH (Zero dependências)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const Sound = {
+      ctx: null,
+      enabled: true,
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+      },
+      beep(freq = 440, duration = 0.1, type = "sine") {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === "suspended") this.ctx.resume();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+      },
+      click() { this.beep(600, 0.05, "triangle"); },
+      success() {
+        this.beep(523, 0.08, "sine");
+        setTimeout(() => this.beep(659, 0.08, "sine"), 80);
+        setTimeout(() => this.beep(783, 0.15, "sine"), 160);
+      },
+      alert() {
+        this.beep(400, 0.1, "sawtooth");
+        setTimeout(() => this.beep(300, 0.15, "sawtooth"), 100);
+      }
+    };
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ESTADO LOCAL & CONFIGURAÇÃO DINÂMICA DE REDE
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    let ws = null;
+    let pingInterval = null;
+    let gameState = null;
+    let currentRenderedPhase = null;
+
+    // Identidade do Aluno
+    let myPlayerId = localStorage.getItem("wiz_player_id") || null;
+    let myName = localStorage.getItem("wiz_player_name") || "";
+    let myEmoji = localStorage.getItem("wiz_player_emoji") || "🦅";
+
+    // Rascunho das Frases (Persistência para não perder nada se a Wi-Fi piscar)
+    let stmtTexts = ["", "", ""];
+    let stmtLieIndex = null;
+    try {
+      const savedTexts = JSON.parse(localStorage.getItem("wiz_draft_stmts"));
+      if (Array.isArray(savedTexts) && savedTexts.length === 3) stmtTexts = savedTexts;
+      const savedLie = localStorage.getItem("wiz_draft_lie_index");
+      if (savedLie !== null) stmtLieIndex = parseInt(savedLie, 10);
+    } catch(e) {}
+
+    // Rascunho das Avaliações { targetId: [bool, bool, bool] }
+    let evaluations = {};
+    try {
+      const savedEvals = JSON.parse(localStorage.getItem("wiz_evaluations"));
+      if (savedEvals && typeof savedEvals === "object") evaluations = savedEvals;
+    } catch(e) {}
+
+    let activeClassmateId = null;
+
+    const AVATARS = [
+      "🦅","🐺","🦁","🐯","🦊","🐻","🐼","🐨",
+      "🦄","🐉","🦋","🐬","🦈","🐙","🦜","🐝",
+      "🌟","⚡","🔥","🌈","🎯","🚀","🎸","🎭",
+      "🏆","💎","🎲","🧩","🌺","🍕","🎨","🦇",
+    ];
+    let selectedEmoji = myEmoji || AVATARS[0];
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // WEBSOCKET RESILIENTE COM HEARTBEAT & RECONEXÃO TRANSPARENTE
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function updateStatusUI(online, text) {
+      const pill = document.getElementById("netStatusPill");
+      const txt = document.getElementById("netStatusText");
+      if (!pill || !txt) return;
+      if (online) {
+        pill.className = "net-status net-status--online";
+        txt.textContent = text || "Online";
+      } else {
+        pill.className = "net-status net-status--offline";
+        txt.textContent = text || "Reconectando";
+      }
+    }
+
+    function connectWS() {
+      if (!myPlayerId) {
+        updateStatusUI(false, "Desconectado");
+        return;
+      }
+
+      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
+
+      updateStatusUI(false, "Conectando");
+
+      // Conecta na mesma origem/host onde o navegador abriu a página!
+      const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${wsProto}//${window.location.host}/ws/student/${myPlayerId}`;
+
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          updateStatusUI(true, "Online");
+          startHeartbeat();
+        };
+
+        ws.onmessage = (e) => {
+          try {
+            const msg = JSON.parse(e.data);
+            if (msg.type === "pong") {
+              // Heartbeat recebido do servidor
+              return;
+            }
+            if (msg.type === "game_state") {
+              handleGameStateUpdate(msg.data);
+            }
+          } catch(err) {
+            console.error("Erro ao processar mensagem do servidor:", err);
+          }
+        };
+
+        ws.onclose = (e) => {
+          clearInterval(pingInterval);
+          updateStatusUI(false, "Reconectando");
+          if (e.code === 4001) {
+            // Sala foi reiniciada pelo professor ou jogador removido
+            console.log("Jogador não encontrado na sala ativa.");
+            myPlayerId = null;
+            localStorage.removeItem("wiz_player_id");
+            renderApp();
+            return;
+          }
+          // Reconecta com backoff curto
+          setTimeout(connectWS, 1800);
+        };
+
+        ws.onerror = () => {
+          updateStatusUI(false, "Erro de rede");
+          ws.close();
+        };
+      } catch (err) {
+        updateStatusUI(false, "Sem sinal");
+        setTimeout(connectWS, 2500);
+      }
+    }
+
+    function startHeartbeat() {
+      clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ action: "ping" }));
+        }
+      }, 8000);
+    }
+
+    // Se o aluno trocar de app ou o celular suspender e acordar, verifica conexão imediatamente
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          connectWS();
+        }
+      }
+    });
+    window.addEventListener("online", () => connectWS());
+
+    function sendAction(action, data = {}) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action, ...data }));
+        return true;
+      }
+      return false;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ATUALIZAÇÃO INTELIGENTE DO ESTADO (SEM DESTRUIR INPUTS)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function handleGameStateUpdate(newState) {
+      const prevPhase = gameState ? gameState.phase : null;
+      gameState = newState;
+
+      // Se a rodada mudou ou o jogador não existe mais
+      if (myPlayerId && !gameState.players[myPlayerId]) {
+        // Tenta reconectar via REST ou volta para o join
+        myPlayerId = null;
+        localStorage.removeItem("wiz_player_id");
+        renderApp();
+        return;
+      }
+
+      // Se entrou na fase de avaliação e temos colegas novos
+      if (gameState.phase === "evaluating") {
+        initEvaluations();
+      }
+
+      // Se a fase mudou (ex: de lobby para submitting), faz o render completo
+      if (prevPhase !== gameState.phase) {
+        Sound.click();
+        renderApp();
+        return;
+      }
+
+      // Se ainda estamos na mesma fase:
+      if (gameState.phase === "submitting") {
+        const me = gameState.players[myPlayerId];
+        // Se eu acabei de enviar, muda para a tela de espera
+        if (me && me.has_submitted && currentRenderedPhase !== "submitting_done") {
+          renderApp();
+          return;
+        }
+        // Se ainda estou digitando minhas frases, NÃO recria o formulário para não fechar o teclado!
+        // Apenas atualiza indicadores externos se houver
+        return;
+      }
+
+      if (gameState.phase === "evaluating") {
+        const me = gameState.players[myPlayerId];
+        if (me && me.eval_done && currentRenderedPhase !== "evaluating_done") {
+          renderApp();
+          return;
+        }
+        // Na avaliação, apenas atualiza contadores caso necessário
+        updateEvaluationProgressUI();
+        return;
+      }
+
+      // Para lobby e results, re-renderiza limpo
+      renderApp();
+    }
+
+    function initEvaluations() {
+      if (!gameState) return;
+      const classmates = Object.values(gameState.players).filter(p => p.id !== myPlayerId && p.has_submitted);
+      let changed = false;
+      classmates.forEach(c => {
+        if (!evaluations[c.id]) {
+          // Padrão: [false, false, false] (nenhuma mentira escolhida ainda)
+          evaluations[c.id] = [false, false, false];
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveDraftEvals();
+      }
+    }
+
+    function saveDraftStmts() {
+      try {
+        localStorage.setItem("wiz_draft_stmts", JSON.stringify(stmtTexts));
+        if (stmtLieIndex !== null) localStorage.setItem("wiz_draft_lie_index", stmtLieIndex.toString());
+      } catch(e) {}
+    }
+
+    function saveDraftEvals() {
+      try {
+        localStorage.setItem("wiz_evaluations", JSON.stringify(evaluations));
+      } catch(e) {}
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // RENDER PRINCIPAL DO APP
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function renderApp() {
+      const app = document.getElementById("app");
+      if (!app) return;
+
+      if (!myPlayerId) {
+        currentRenderedPhase = "join";
+        app.innerHTML = renderJoinScreen();
+        return;
+      }
+
+      if (!gameState) {
+        currentRenderedPhase = "connecting";
+        app.innerHTML = renderWaitingScreen("Conectando à sala de aula...", "⏳");
+        return;
+      }
+
+      switch (gameState.phase) {
+        case "lobby":
+          currentRenderedPhase = "lobby";
+          app.innerHTML = renderLobbyScreen();
+          break;
+
+        case "submitting":
+          const me = gameState.players[myPlayerId];
+          if (me && me.has_submitted) {
+            currentRenderedPhase = "submitting_done";
+            app.innerHTML = renderWaitingScreen("Suas 3 frases foram enviadas com sucesso!<br>Aguardando os colegas finalizarem...", "🎉");
+          } else {
+            currentRenderedPhase = "submitting_form";
+            app.innerHTML = renderSubmittingScreen();
+          }
+          break;
+
+        case "evaluating":
+          const meEval = gameState.players[myPlayerId];
+          if (meEval && meEval.eval_done) {
+            currentRenderedPhase = "evaluating_done";
+            app.innerHTML = renderWaitingScreen("Suas classificações foram enviadas!<br>Aguardando o professor revelar os resultados...", "🔍");
+          } else {
+            currentRenderedPhase = "evaluating_kanban";
+            app.innerHTML = renderEvaluatingScreen();
+          }
+          break;
+
+        case "results":
+          currentRenderedPhase = "results";
+          app.innerHTML = renderResultsScreen();
+          break;
+      }
+    }
+
+    // ─── 1. TELA DE JOIN / ENTRADA ────────────────────────────
+    function renderJoinScreen() {
+      return `
+        <div class="join-screen">
+          <img src="/static/img/wizard-logo.svg" alt="Wizard by Pearson" style="height:46px;margin-bottom:12px;max-width:200px">
+          <h1 style="font-family:var(--font-display);font-style:italic;font-weight:900;text-transform:uppercase;font-size:24px;color:var(--wiz-navy);margin-bottom:4px;letter-spacing:0.5px">
+            Two Truths &amp; A Lie
+          </h1>
+          <div style="display:inline-block;background:var(--wiz-red);color:#fff;padding:3px 12px;border-radius:var(--radius-pill);font-family:var(--font-display);font-size:10px;font-weight:900;font-style:italic;letter-spacing:1px;margin-bottom:20px;text-transform:uppercase">
+            Detector de Mentiras • Wizard Experience
+          </div>
+
+          <div class="join-form">
+            <!-- Escolha de Avatar -->
+            <div class="card mb-2" style="padding:16px">
+              <div style="font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--wiz-navy);margin-bottom:12px">
+                Escolha seu Avatar:
+              </div>
+              <div class="avatar-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">
+                ${AVATARS.map(av => `
+                  <button
+                    type="button"
+                    class="avatar-grid__item ${av === selectedEmoji ? 'avatar-grid__item--selected' : ''}"
+                    onclick="selectAvatar('${av}')"
+                  >${av}</button>
+                `).join("")}
+              </div>
+            </div>
+
+            <!-- Nome -->
+            <div class="card" style="padding:18px">
+              <label style="display:block;font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--wiz-navy);margin-bottom:8px">
+                Seu Primeiro Nome:
+              </label>
+              <input
+                id="joinNameInput"
+                class="input"
+                type="text"
+                maxlength="30"
+                placeholder="Ex: Lucas, Sofia, Pedro..."
+                value="${escapeHtml(myName)}"
+                autocomplete="nickname"
+                style="margin-bottom:16px"
+                onkeydown="if(event.key==='Enter')joinGame()"
+              >
+              <button
+                id="joinSubmitBtn"
+                class="btn btn--primary btn--lg btn--full"
+                onclick="joinGame()"
+              >
+                🚀 Entrar no Jogo
+              </button>
+            </div>
+
+            <div id="joinErrorMsg" style="display:none;margin-top:12px;padding:10px;border-radius:var(--radius-sm);background:var(--wiz-error-bg);color:var(--wiz-error);font-size:13px;font-weight:600"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectAvatar(emoji) {
+      Sound.click();
+      selectedEmoji = emoji;
+      renderApp();
+    }
+
+    async function joinGame() {
+      Sound.init();
+      const input = document.getElementById("joinNameInput");
+      const btn = document.getElementById("joinSubmitBtn");
+      const errBox = document.getElementById("joinErrorMsg");
+
+      const name = input ? input.value.trim() : "";
+      if (!name) {
+        showError("Por favor, digite seu nome!");
+        if (input) input.focus();
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Entrando...";
+      }
+
+      try {
+        // Usa URL relativa garantindo que o host/porta corretos sejam usados
+        const res = await fetch("/api/join", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name,
+            emoji: selectedEmoji,
+            player_id: myPlayerId,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          showError(data.error || "Erro ao entrar na sala.");
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "🚀 Entrar no Jogo";
+          }
+          return;
+        }
+
+        Sound.success();
+        myPlayerId = data.player_id;
+        myName = data.name;
+        myEmoji = data.emoji;
+
+        localStorage.setItem("wiz_player_id", myPlayerId);
+        localStorage.setItem("wiz_player_name", myName);
+        localStorage.setItem("wiz_player_emoji", myEmoji);
+
+        connectWS();
+      } catch (err) {
+        showError("Falha ao comunicar com o servidor. Verifique se o Wi-Fi está conectado!");
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "🚀 Entrar no Jogo";
+        }
+      }
+    }
+
+    function showError(msg) {
+      Sound.alert();
+      const errBox = document.getElementById("joinErrorMsg");
+      if (errBox) {
+        errBox.textContent = msg;
+        errBox.style.display = "block";
+      }
+    }
+
+    // ─── 2. TELA DO LOBBY (AGUARDANDO O PROFESSOR) ────────────
+    function renderLobbyScreen() {
+      const players = Object.values(gameState.players || {});
+      return `
+        <div class="join-screen">
+          <div style="font-size:64px;margin-bottom:12px" class="anim-pulse">${myEmoji}</div>
+          <h2 style="font-family:var(--font-display);font-size:24px;color:var(--wiz-navy);margin-bottom:6px">
+            Tudo pronto, ${escapeHtml(myName)}!
+          </h2>
+          <p style="color:var(--wiz-gray-600);font-size:14px;margin-bottom:28px">
+            Aguardando o professor iniciar a rodada no notebook...
+          </p>
+
+          <div class="card" style="width:100%;max-width:380px;padding:18px">
+            <div style="font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--wiz-navy);margin-bottom:12px;display:flex;justify-content:space-between">
+              <span>👥 Colegas na Sala</span>
+              <span class="badge badge--orange">${players.length} online</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              ${players.map(p => `
+                <span class="badge ${p.id === myPlayerId ? 'badge--orange' : 'badge--gray'}" style="font-size:13px;padding:6px 12px">
+                  ${p.emoji} ${escapeHtml(p.name)}
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ─── 3. TELA DE ESCRITA (2 VERDADES E 1 MENTIRA) ─────────
+    function renderSubmittingScreen() {
+      const placeholders = [
+        "Ex: Eu já viajei para o exterior...",
+        "Ex: Minha comida favorita é pizza...",
+        "Ex: Eu sei tocar violão...",
+      ];
+
+      return `
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:40px;margin-bottom:6px">✍️</div>
+          <h2 style="font-family:var(--font-display);font-size:22px;color:var(--wiz-navy);margin-bottom:4px">
+            Escreva suas 3 frases
+          </h2>
+          <p style="color:var(--wiz-gray-600);font-size:14px">
+            Escreva <strong>2 verdades</strong> e <strong>1 mentira</strong> sobre você. Marque qual delas é a mentira!
+          </p>
+        </div>
+
+        ${[0, 1, 2].map(i => {
+          const isLie = stmtLieIndex === i;
+          return `
+            <div class="stmt-card ${isLie ? 'stmt-card--lie' : ''}" id="stmtCard-${i}">
+              <div class="stmt-card__header">
+                <span class="stmt-card__tag">
+                  Frase ${String.fromCharCode(65 + i)}
+                  ${isLie ? '<span style="color:var(--wiz-error);font-size:11px">● MENTIRA</span>' : ''}
+                </span>
+                <button
+                  type="button"
+                  class="lie-badge-btn ${isLie ? 'lie-badge-btn--active' : ''}"
+                  id="lieBtn-${i}"
+                  onclick="selectLie(${i})"
+                >
+                  ${isLie ? '🤥 É a Mentira' : 'Marcar como mentira'}
+                </button>
+              </div>
+
+              <textarea
+                class="input input--textarea ${isLie ? 'input--error' : ''}"
+                id="stmtInput-${i}"
+                rows="2"
+                placeholder="${placeholders[i]}"
+                oninput="handleStmtInput(${i}, this.value)"
+              >${escapeHtml(stmtTexts[i] || '')}</textarea>
+            </div>
+          `;
+        }).join("")}
+
+        <div class="bottom-bar">
+          <div class="bottom-bar__inner">
+            <button
+              id="submitStatementsBtn"
+              class="btn btn--primary btn--lg btn--full"
+              onclick="submitMyStatements()"
+            >
+              📤 Enviar Minhas Frases
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleStmtInput(index, val) {
+      stmtTexts[index] = val;
+      saveDraftStmts();
+    }
+
+    function selectLie(index) {
+      Sound.click();
+      stmtLieIndex = (stmtLieIndex === index) ? null : index;
+      saveDraftStmts();
+
+      // Atualiza visual dos 3 cards sem recriar os textareas (mantém foco e cursor)
+      for (let i = 0; i < 3; i++) {
+        const card = document.getElementById(`stmtCard-${i}`);
+        const btn = document.getElementById(`lieBtn-${i}`);
+        const input = document.getElementById(`stmtInput-${i}`);
+        const isLie = (stmtLieIndex === i);
+
+        if (card) {
+          card.className = `stmt-card ${isLie ? 'stmt-card--lie' : ''}`;
+        }
+        if (btn) {
+          btn.className = `lie-badge-btn ${isLie ? 'lie-badge-btn--active' : ''}`;
+          btn.innerHTML = isLie ? '🤥 É a Mentira' : 'Marcar como mentira';
+        }
+        if (input) {
+          input.className = `input input--textarea ${isLie ? 'input--error' : ''}`;
+        }
+      }
+    }
+
+    function submitMyStatements() {
+      Sound.init();
+      // Validações
+      for (let i = 0; i < 3; i++) {
+        if (!stmtTexts[i] || !stmtTexts[i].trim()) {
+          Sound.alert();
+          alert(`Por favor, escreva o texto da Frase ${String.fromCharCode(65 + i)}!`);
+          const el = document.getElementById(`stmtInput-${i}`);
+          if (el) el.focus();
+          return;
+        }
+      }
+
+      if (stmtLieIndex === null) {
+        Sound.alert();
+        alert("Você precisa marcar qual das 3 frases é a sua MENTIRA! 🤥");
+        return;
+      }
+
+      const payload = stmtTexts.map((txt, i) => ({
+        text: txt.trim(),
+        is_lie: (i === stmtLieIndex),
+      }));
+
+      const sent = sendAction("submit_statements", { statements: payload });
+      if (!sent) {
+        Sound.alert();
+        alert("Sem conexão no momento. Tentando reconectar...");
+        connectWS();
+        return;
+      }
+
+      Sound.success();
+      // Atualiza estado local de imediato
+      if (gameState && gameState.players[myPlayerId]) {
+        gameState.players[myPlayerId].has_submitted = true;
+      }
+      renderApp();
+    }
+
+    // ─── 4. TELA DE AVALIAÇÃO (DETECTOR DE MENTIRAS 1-TAP) ────
+    function renderEvaluatingScreen() {
+      if (!gameState) return '';
+      const classmates = Object.values(gameState.players).filter(p => p.id !== myPlayerId && p.has_submitted);
+      const myCard = gameState.players[myPlayerId];
+      const myCi = getColorIndex(myPlayerId);
+
+      const totalClassmates = classmates.length;
+      let evaluatedCount = 0;
+      classmates.forEach(c => {
+        if (isClassmateEvaluated(c.id)) evaluatedCount++;
+      });
+      const allDone = (evaluatedCount === totalClassmates && totalClassmates > 0);
+
+      return `
+        <!-- Meu Card de Referência -->
+        <div class="card mb-3" style="padding:14px;border-left:4px solid var(--wiz-orange)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="font-size:20px">${myCard ? myCard.emoji : '🦅'}</span>
+            <span style="font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--wiz-navy)">
+              Suas Frases (Você):
+            </span>
+          </div>
+          <div style="font-size:13px;line-height:1.4;color:var(--wiz-gray-600)">
+            ${(myCard && myCard.statements ? myCard.statements : []).map((s, idx) => `
+              <div style="margin-bottom:4px">
+                <strong>${String.fromCharCode(65 + idx)}:</strong> ${escapeHtml(s.text)}
+                ${s.is_lie ? '<span style="color:var(--wiz-error);font-weight:700"> (sua mentira)</span>' : ''}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <!-- Instrução do Detector -->
+        <div style="text-align:center;margin-bottom:16px">
+          <h2 style="font-family:var(--font-display);font-size:20px;color:var(--wiz-navy);margin-bottom:4px">
+            🕵️ Detector de Mentiras
+          </h2>
+          <p style="color:var(--wiz-gray-600);font-size:13px">
+            Toque na frase que você acha que é a <strong>MENTIRA</strong> de cada colega!
+          </p>
+          <div id="evalProgressBadge" style="margin-top:8px" class="badge ${allDone ? 'badge--success' : 'badge--orange'}">
+            Avaliados: ${evaluatedCount} de ${totalClassmates}
+          </div>
+        </div>
+
+        <!-- Lista de Colegas -->
+        <div id="classmatesList">
+          ${classmates.map(c => renderClassmateCard(c)).join("")}
+        </div>
+
+        <div class="bottom-bar">
+          <div class="bottom-bar__inner">
+            <button
+              id="submitEvalsBtn"
+              class="btn ${allDone ? 'btn--success' : 'btn--secondary'} btn--lg btn--full"
+              ${allDone ? '' : 'disabled'}
+              onclick="submitAllEvaluations()"
+            >
+              ${allDone ? '🏁 Enviar Todas as Avaliações' : `Classifique todos (${evaluatedCount}/${totalClassmates})`}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderClassmateCard(player) {
+      const pid = player.id;
+      const ci = getColorIndex(pid);
+      const isDone = isClassmateEvaluated(pid);
+      const currentLieIndex = getLieIndexForPlayer(pid);
+      const stmts = player.statements || [];
+
+      return `
+        <div class="classmate-card ${isDone ? 'classmate-card--done' : 'classmate-card--active'}" id="card-${pid}">
+          <div class="classmate-card__header ch-${ci}">
+            <span style="font-size:24px">${player.emoji}</span>
+            <span class="classmate-card__name">${escapeHtml(player.name)}</span>
+            <span id="cardStatus-${pid}" class="badge ${isDone ? 'badge--success' : 'badge--gray'}" style="color:${isDone?'#1e8449':'#fff'}">
+              ${isDone ? '✓ Concluído' : 'Pendente'}
+            </span>
+          </div>
+
+          <div class="classmate-card__body">
+            ${stmts.map((s, idx) => {
+              const isMarkedAsLie = (currentLieIndex === idx);
+              const isMarkedAsTruth = (currentLieIndex !== null && !isMarkedAsLie);
+
+              let choiceClass = '';
+              let badgeTxt = 'Tocar se for Mentira';
+              if (isMarkedAsLie) {
+                choiceClass = 'eval-choice-btn--lie';
+                badgeTxt = '🤥 MENTIRA ESCOLHIDA';
+              } else if (isMarkedAsTruth) {
+                choiceClass = 'eval-choice-btn--truth';
+                badgeTxt = '✓ Verdade';
+              }
+
+              return `
+                <button
+                  type="button"
+                  class="eval-choice-btn ${choiceClass}"
+                  id="choiceBtn-${pid}-${idx}"
+                  onclick="selectPeerLie('${pid}', ${idx})"
+                >
+                  <span class="badge bg-c-${ci}" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0">
+                    ${String.fromCharCode(65 + idx)}
+                  </span>
+                  <div style="flex:1">
+                    <div style="margin-bottom:4px">${escapeHtml(s.text)}</div>
+                    <span style="font-size:11px;font-weight:700;letter-spacing:0.5px">
+                      ${badgeTxt}
+                    </span>
+                  </div>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function isClassmateEvaluated(pid) {
+      const arr = evaluations[pid];
+      if (!Array.isArray(arr) || arr.length !== 3) return false;
+      // Tem exatamente uma mentira marcada
+      return arr.filter(v => v === true).length === 1;
+    }
+
+    function getLieIndexForPlayer(pid) {
+      const arr = evaluations[pid];
+      if (!Array.isArray(arr)) return null;
+      const idx = arr.indexOf(true);
+      return idx >= 0 ? idx : null;
+    }
+
+    function selectPeerLie(targetId, lieIndex) {
+      Sound.click();
+      if (!evaluations[targetId]) {
+        evaluations[targetId] = [false, false, false];
+      }
+
+      // Mecânica 1-tap: A frase clicada vira Mentira (true) e as outras duas viram Verdades (false)
+      evaluations[targetId] = [
+        lieIndex === 0,
+        lieIndex === 1,
+        lieIndex === 2
+      ];
+
+      saveDraftEvals();
+
+      // Atualiza visualmente este card específico sem re-renderizar todo o app (zero jitter)
+      const player = gameState.players[targetId];
+      if (!player) return;
+
+      const card = document.getElementById(`card-${targetId}`);
+      if (card) card.className = "classmate-card classmate-card--done";
+
+      const statusBadge = document.getElementById(`cardStatus-${targetId}`);
+      if (statusBadge) {
+        statusBadge.className = "badge badge--success";
+        statusBadge.textContent = "✓ Concluído";
+        statusBadge.style.color = "#1e8449";
+      }
+
+      for (let idx = 0; idx < 3; idx++) {
+        const btn = document.getElementById(`choiceBtn-${targetId}-${idx}`);
+        if (btn) {
+          const isMarkedAsLie = (idx === lieIndex);
+          btn.className = `eval-choice-btn ${isMarkedAsLie ? 'eval-choice-btn--lie' : 'eval-choice-btn--truth'}`;
+          const span = btn.querySelector("span[style*='font-size:11px']");
+          if (span) {
+            span.textContent = isMarkedAsLie ? '🤥 MENTIRA ESCOLHIDA' : '✓ Verdade';
+          }
+        }
+      }
+
+      updateEvaluationProgressUI();
+    }
+
+    function updateEvaluationProgressUI() {
+      if (!gameState) return;
+      const classmates = Object.values(gameState.players).filter(p => p.id !== myPlayerId && p.has_submitted);
+      let count = 0;
+      classmates.forEach(c => {
+        if (isClassmateEvaluated(c.id)) count++;
+      });
+      const allDone = (count === classmates.length && classmates.length > 0);
+
+      const progBadge = document.getElementById("evalProgressBadge");
+      if (progBadge) {
+        progBadge.className = `badge ${allDone ? 'badge--success' : 'badge--orange'}`;
+        progBadge.textContent = `Avaliados: ${count} de ${classmates.length}`;
+      }
+
+      const submitBtn = document.getElementById("submitEvalsBtn");
+      if (submitBtn) {
+        if (allDone) {
+          submitBtn.disabled = false;
+          submitBtn.className = "btn btn--success btn--lg btn--full";
+          submitBtn.textContent = "🏁 Enviar Todas as Avaliações";
+        } else {
+          submitBtn.disabled = true;
+          submitBtn.className = "btn btn--secondary btn--lg btn--full";
+          submitBtn.textContent = `Classifique todos (${count}/${classmates.length})`;
+        }
+      }
+    }
+
+    function submitAllEvaluations() {
+      Sound.init();
+      const classmates = Object.values(gameState.players).filter(p => p.id !== myPlayerId && p.has_submitted);
+      for (const c of classmates) {
+        if (!isClassmateEvaluated(c.id)) {
+          Sound.alert();
+          alert(`Falta avaliar o card de ${c.name}!`);
+          const el = document.getElementById(`card-${c.id}`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+      }
+
+      const sent = sendAction("submit_evaluations", { evaluations: evaluations });
+      if (!sent) {
+        Sound.alert();
+        alert("Sem conexão no momento. Reconectando...");
+        connectWS();
+        return;
+      }
+
+      Sound.success();
+      if (gameState && gameState.players[myPlayerId]) {
+        gameState.players[myPlayerId].eval_done = true;
+      }
+      renderApp();
+    }
+
+    // ─── 5. TELA DE RESULTADOS FINAIS ─────────────────────────
+    function renderResultsScreen() {
+      const rankings = gameState.rankings || [];
+      const myRank = rankings.findIndex(r => r.id === myPlayerId) + 1;
+      const myData = rankings.find(r => r.id === myPlayerId);
+      const maxScore = gameState.max_score || 0;
+
+      return `
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:56px;margin-bottom:8px" class="anim-bounce-in">🏆</div>
+          <h2 style="font-family:var(--font-display);font-size:24px;color:var(--wiz-navy);margin-bottom:4px">
+            Resultado da Rodada
+          </h2>
+          <p style="color:var(--wiz-gray-600);font-size:14px">
+            Veja sua pontuação no Detector de Mentiras
+          </p>
+        </div>
+
+        <!-- Meu Desempenho -->
+        <div class="my-result-badge anim-fade-in-up">
+          <div style="font-size:14px;color:var(--wiz-gray-600);font-weight:600;margin-bottom:4px">Sua Classificação</div>
+          <div style="font-family:var(--font-display);font-size:54px;font-weight:900;color:var(--wiz-orange);line-height:1">
+            #${myRank > 0 ? myRank : '-'}
+          </div>
+          <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--wiz-navy);margin-top:8px">
+            ${myData ? myData.score : 0} pontos
+          </div>
+          <div style="font-size:12px;color:var(--wiz-gray-400)">
+            de um total máximo de ${maxScore} pts
+          </div>
+        </div>
+
+        <!-- Detalhamento por Colega -->
+        ${myData && myData.breakdown && Object.keys(myData.breakdown).length > 0 ? `
+          <div class="card mb-3" style="padding:16px">
+            <div style="font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--wiz-navy);margin-bottom:12px">
+              📊 Suas Respostas por Colega
+            </div>
+            ${Object.entries(myData.breakdown).map(([targetId, bd]) => {
+              const target = gameState.players[targetId];
+              if (!target) return '';
+              const ci = getColorIndex(targetId);
+              return `
+                <div style="padding:10px 12px;margin-bottom:8px;border-radius:var(--radius-sm);background:var(--wiz-off-white);border-left:3px solid ${getColorHex(ci)};display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:14px;color:var(--wiz-navy)">
+                      ${target.emoji} ${escapeHtml(target.name)}
+                    </div>
+                    <div style="font-size:12px;color:var(--wiz-gray-600)">
+                      ${bd.correct}/3 acertos ${bd.bonus > 0 ? '• ⭐ Bônus 100%' : ''}
+                    </div>
+                  </div>
+                  <div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--wiz-orange)">
+                    +${bd.total} pts
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        ` : ''}
+
+        <!-- Ranking Geral da Sala -->
+        <div class="card" style="padding:16px">
+          <div style="font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--wiz-navy);margin-bottom:12px">
+            🏅 Placar Geral
+          </div>
+          ${rankings.map((p, i) => `
+            <div style="
+              display:flex;align-items:center;gap:12px;
+              padding:10px 14px;margin-bottom:6px;
+              border-radius:var(--radius-md);
+              background:${p.id === myPlayerId ? 'var(--wiz-orange-pale)' : 'var(--wiz-off-white)'};
+              border:${p.id === myPlayerId ? '2px solid var(--wiz-orange)' : '1px solid var(--wiz-gray-200)'};
+            ">
+              <span style="font-family:var(--font-display);font-weight:800;font-size:15px;width:24px;color:var(--wiz-navy)">
+                ${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1)}
+              </span>
+              <span style="font-size:22px">${p.emoji}</span>
+              <span style="flex:1;font-weight:600;font-size:14px;color:var(--wiz-navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                ${escapeHtml(p.name)} ${p.id === myPlayerId ? '<strong>(você)</strong>' : ''}
+              </span>
+              <span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--wiz-orange)">
+                ${p.score} pts
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    // ─── TELA DE ESPERA / FEEDBACK ───────────────────────────
+    function renderWaitingScreen(msg, emoji) {
+      return `
+        <div class="join-screen">
+          <div style="font-size:56px;margin-bottom:14px" class="anim-pulse">${emoji}</div>
+          <p style="color:var(--wiz-navy);font-size:16px;font-weight:600;text-align:center;line-height:1.5;max-width:340px">
+            ${msg}
+          </p>
+        </div>
+      `;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // UTILITÁRIOS
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function getColorIndex(playerId) {
+      if (!gameState || !Array.isArray(gameState.join_order)) return 0;
+      const idx = gameState.join_order.indexOf(playerId);
+      return idx >= 0 ? idx % 12 : 0;
+    }
+
+    const COLOR_HEX = [
+      "#F37021","#2A4470","#27AE60","#9B59B6","#E74C3C","#2980B9",
+      "#F39C12","#1ABC9C","#E91E63","#00BCD4","#8BC34A","#FF5722"
+    ];
+    function getColorHex(ci) { return COLOR_HEX[ci % 12]; }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // INICIALIZAÇÃO
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    if (myPlayerId) {
+      connectWS();
+    } else {
+      renderApp();
+    }
+  </script>
+</body>
+</html>

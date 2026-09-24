@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>Getting Started: Darkhold classroom quiz experience</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#0062cc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Darkhold Quiz">
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/images/icons/icon-192.png">
+    <link href="/styles/darkhold-styles.css" rel="stylesheet" />
+    <link href="/styles/team-styles.css" rel="stylesheet" />
+    <link href="/styles/scoreboard.css" rel="stylesheet" />
+    <script type="text/javascript" src="/scripts/theme-manager.js"></script>
+    <script type="text/javascript" src="/scripts/audio-manager.js"></script>
+    <script type="text/javascript" src="/scripts/language-manager.js"></script>
+    <script type="text/javascript" src="/scripts/accessibility.js"></script>
+    <script type="text/javascript" src="/scripts/core/sockjs.min.js"></script>
+    <script type="text/javascript" src="/scripts/core/stomp.min.js"></script>
+    <script type="text/javascript" src="/scripts/scoreboard-scripts.js"></script>
+    <script type="text/javascript" src="/scripts/common-scripts.js"></script>
+</head>
+<body class="scoreboard-page" onload="connect()">
+    <div th:insert="~{navbar :: navbar}"></div>
+
+    <!-- Animated background -->
+    <div class="scoreboard-bg">
+        <div class="scoreboard-particle"></div>
+        <div class="scoreboard-particle"></div>
+        <div class="scoreboard-particle"></div>
+        <div class="scoreboard-particle"></div>
+        <div class="scoreboard-particle"></div>
+    </div>
+
+    <!-- Header Controls -->
+    <div class="scoreboard-header">
+        <div class="scoreboard-title-badge" th:text="#{scoreboard.title}">Scoreboard</div>
+        <div class="scoreboard-controls" th:if="${not #sets.isEmpty(#authentication.getPrincipal().getAuthorities())}">
+            <button class="scoreboard-btn scoreboard-btn--skip" type="button" onclick="skipQuestion();">
+                <i class="fas fa-forward"></i>
+                <span th:text="#{scoreboard.skip}">Skip</span>
+            </button>
+            <button class="scoreboard-btn scoreboard-btn--end" type="button" onclick="endGameEarly();">
+                <i class="fas fa-stop"></i>
+                <span th:text="#{scoreboard.endGame}">End Game</span>
+            </button>
+            <button id="nextButton" class="scoreboard-btn scoreboard-btn--next" type="button" onclick="askQuestion();">
+                <i class="fas fa-arrow-right"></i>
+                <span th:text="#{game.next}">Next</span>
+            </button>
+        </div>
+    </div>
+    <form action="#" th:object="${score}" method="post">
+        <input type="hidden" th:value="${quizPin}" id="quizPin" name="quizPin"/>
+        <input type="hidden" th:value="${isTeamMode}" id="isTeamMode"/>
+
+        <div class="scoreboard-content">
+            <div class="scoreboard-card">
+                <!-- Scoreboard live region for accessibility -->
+                <div class="sr-only" aria-live="polite" aria-atomic="false" id="scoreboardAnnouncements" th:text="#{scoreboard.updated}">
+                    Scoreboard updated
+                </div>
+
+                <!-- Team/Individual Toggle (only shown in team mode) -->
+                <div th:if="${isTeamMode}" class="scoreboard-toggle">
+                    <div class="scoreboard-toggle-group" role="group" aria-label="Scoreboard view">
+                        <button type="button" class="scoreboard-toggle-btn active" id="btnIndividual" onclick="showIndividualScores()" th:text="#{scoreboard.individual}">Individual</button>
+                        <button type="button" class="scoreboard-toggle-btn" id="btnTeams" onclick="showTeamScores()" th:text="#{scoreboard.teams}">Teams</button>
+                    </div>
+                </div>
+
+                <!-- Team Scoreboard (hidden by default) -->
+                <div th:if="${isTeamMode}" id="teamScoreboard" class="team-scoreboard" style="display:none;">
+                    <div th:each="team, stat : ${teamScores}"
+                         th:class="'team-score-card team-card-' + ${team.color} + (${stat.index == 0} ? ' winner' : '') + ' expandable-team'"
+                         th:data-team-index="${stat.index}"
+                         onclick="toggleTeamExpansion(this)">
+                        <div class="team-card-header">
+                            <span th:class="'team-color-dot team-color-dot-' + ${team.color}"></span>
+                            <span th:text="${team.teamName}">Team Name</span>
+                            <span class="expand-indicator">&#9660;</span>
+                        </div>
+                        <div class="team-score-value" th:text="${team.totalScore}">0</div>
+                        <div class="team-score-label">
+                            <span th:text="'Rank #' + ${team.rank}"></span> |
+                            <span th:text="${team.memberCount} + ' members'"></span>
+                        </div>
+                        <!-- Expandable member list -->
+                        <div class="team-members-detail" style="display:none;">
+                            <div class="team-members-header">
+                                <span th:text="#{scoreboard.player}">Player</span>
+                                <span th:text="#{scoreboard.score}">Score</span>
+                            </div>
+                            <div th:each="member : ${team.individualScores}"
+                                 th:class="'team-member-score' + (${memberStat.index == 0} ? ' top-contributor' : '')">
+                                <span th:text="${member.username}">Player</span>
+                                <span th:text="${member.currentScore}">0</span>
+                            </div>
+                            <div th:if="${team.individualScores == null or team.individualScores.isEmpty()}" class="no-members" th:text="#{scoreboard.noScoresYet}">
+                                No scores yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Scoreboard -->
+                <div id="individualScoreboard" class="scoreboard-table-container">
+                    <table class="scoreboard-table" role="main" aria-label="Game scoreboard">
+                        <thead>
+                            <tr>
+                                <th class="rank-cell" scope="col" th:text="#{scoreboard.rank}">Rank</th>
+                                <th class="username-cell" scope="col" th:text="#{scoreboard.player}">Player</th>
+                                <th class="score-cell" scope="col" th:text="#{scoreboard.score}">Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="result : ${scoreResults}"
+                                th:classappend="${#authentication.getPrincipal().getUsername() == result.username} ? 'current-user' : ''">
+                                <td class="rank-cell">
+                                    <span th:text="${result.rank}"></span>
+                                    <span th:if="${result.rankUp}" class="rank-up">&#9650;</span>
+                                    <span th:if="${result.rankDown}" class="rank-down">&#9660;</span>
+                                </td>
+                                <td class="username-cell">
+                                    [[${result.username}]]
+                                    <span th:if="${result.hasStreak()}" class="streak-badge">
+                                        <i class="fas fa-fire"></i>
+                                        <span th:text="${result.streakDisplay}">3</span>
+                                    </span>
+                                </td>
+                                <td class="score-cell">
+                                    <span th:text="${result.currentScore}"></span>
+                                    <span th:if="${result.scoreDelta > 0}" class="score-delta rank-up"
+                                          th:text="'+' + ${result.scoreDelta}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+    <script type="text/javascript" src="/scripts/core/popper.min.js"></script>
+    <script type="text/javascript" src="/scripts/core/bootstrap-5.3.1/bootstrap.min.js"></script>
+</body>
+</html>

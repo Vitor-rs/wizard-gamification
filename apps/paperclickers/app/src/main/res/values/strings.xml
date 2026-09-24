@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">paper\u200bclickers</string>
+    <string name="app_title">paperclickers</string>
+
+    <string name="get_started">Start paperclickers</string>
+    <string name="include_tips_in_settings">You can always enable\nguided usage in settings</string>
+
+    <string name="start_button_with_tips">guided usage</string>
+    <string name="start_button_no_tips">no usage tips</string>
+
+    <string name="onboarding_page_1_description">Easy way to survey\nyour students</string>
+    <string name="onboarding_page_2_description">Print and distribute\nthe answering cards</string>
+    <string name="onboarding_page_3_description">Ask a question\nand collect the answers</string>
+    <string name="onboarding_page_4_description">Keep students performance history</string>
+
+    <string name="start_button">start</string>
+    <string name="save_question_title">Question for the class</string>
+    <string name="done_button">new question</string>
+    
+    <string name="hint1Start">Scan the room until all codes are detected:\u0020</string>
+    <string name="hint1End">\u0020found</string>
+    <string name="hint2">To finish, touch the screen for two seconds</string>
+
+    <string name="frequencies_debug">[dev] Detected codes frequency will appear here</string>
+    <string name="title_activity_about">About paperclickers</string>
+ 	
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <string name="saved_answers_log">Answers saved in log</string>
+    <string name="error_saving_pdf">Error saving answering cards pdf</string>
+    <string name="error_saving_log">Error saving answers log</string>
+    <string name="file_saved">saved</string>
+    
+    <string name="pie_chart_answers">answers</string>
+    
+    <string name="cannot_generate_PDF">Can\'t generate answering cards</string>
+    <string name="visit_project_page_for_topcodes">TopCodes generation requires Android version 4.4 or above.\n\nVisit project\'s GitHub to get students\' codes</string>
+    <string name="go_github">Go to GitHub</string>
+    
+    <string name="hold_area">hold here</string>
+    
+    <string name="development_current_cycle">cycle:</string>
+    <string name="development_current_threshold">threshold:</string>
+    
+    <string name="auto_promotion_1">follow us on</string>
+    <string name="auto_promotion_2">github.com/learningtitans/paperclickers</string>
+
+    <string name="paperclickers_about">file:///android_asset/paperclickers_about.html</string>
+
+    <string name="overlay_start_screen_print_txt">Access settings to print students\' answering codes</string>
+    <string name="overlay_start_screen_start_txt">Start capturing answers</string>
+
+    <string name="overlay_start_screen_share_txt">Access settings to share the answers log</string>
+
+    <string name="overlay_capture_screen_txt">Remember to stay at least 2 meters distance from the answering cards!</string>
+
+    <string name="overlay_answers_screen_return_txt">Return to the capture screen if there are missing answers</string>
+    <string name="overlay_answers_screen_scroll_txt">Scroll vertically the list to check all the answers</string>
+    <string name="overlay_answers_screen_chart_txt">Check the answers chart</string>
+
+    <string name="overlay_chart_screen_return_txt">Return to the answers</string>
+    <string name="overlay_chart_screen_new_txt">Start a new question</string>
+
+    <string name="topcodes_pdf_single_file_name">paperclickers_topCodes.pdf</string>
+    <string name="topcodes_pdf_recto_file_name">paperclickers_topCodes_recto.pdf</string>
+    <string name="topcodes_pdf_verso_file_name">paperclickers_topCodes_verso.pdf</string>
+    <string name="answerslog_file_name">paperclickers_AnswersLog.csv</string>
+    <string name="answerslog_timestamp_header">TIMESTAMP</string>
+    <string name="answerslog_tag_header">QUESTION</string>
+
+</resources>

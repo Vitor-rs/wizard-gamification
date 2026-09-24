@@ -1,0 +1,70 @@
+const AIProvider = require('./provider');
+
+class GoogleProvider extends AIProvider {
+    constructor(config) {
+        super(config);
+        this.baseUrl = config.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+        this.model = config.model || 'gemini-3.8-flash';
+    }
+
+    async listModels() {
+        const response = await fetch(`${this.baseUrl}/models?key=${this.apiKey}`);
+        if (!response.ok) return ['gemini-3.6-flash'];
+        const data = await response.json();
+        const models = (data.models || [])
+            .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+            .map(m => m.name.replace('models/', ''))
+            .filter(id => id.startsWith('gemini-') && !id.includes('embedding') && !id.includes('preview-tts'))
+            .sort();
+        return models.length > 0 ? models : ['gemini-3.6-flash'];
+    }
+
+    async *generateStream(options) {
+        const url = `${this.baseUrl}/models/${this.model}:streamGenerateContent?alt=sse&key=${this.apiKey}`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: `${this.getSystemPrompt(options)}\n\n${this.getUserPrompt(options)}` }]
+                }],
+                generationConfig: {
+                    temperature: options?.mode === 'metadata' ? 0.5 : 0.7,
+                    maxOutputTokens: options?.mode === 'metadata' ? 1024 : 8192
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`Google AI API error: ${response.status} - ${error}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+                try {
+                    const parsed = JSON.parse(trimmed.slice(6));
+                    const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) yield text;
+                } catch (e) {}
+            }
+        }
+    }
+}
+
+module.exports = GoogleProvider;

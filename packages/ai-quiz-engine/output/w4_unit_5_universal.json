@@ -1,0 +1,111 @@
+{
+  "title": "Wizard W4 - Unit 5: Airport Adventures & Present Perfect",
+  "book": "W4",
+  "unit": "Unit 5",
+  "level": "Teens",
+  "target_language": "en",
+  "grammar_focus": [
+    "Present Perfect with already, yet, just",
+    "Present Perfect vs Simple Past",
+    "Have you ever...?"
+  ],
+  "vocabulary_focus": [
+    "boarding pass",
+    "carry-on luggage",
+    "customs",
+    "gate",
+    "delayed",
+    "take off"
+  ],
+  "questions": [
+    {
+      "id": 1,
+      "type": "multiple_choice",
+      "question": "Choose the correct sentence: Have you checked your luggage ________?",
+      "options": [
+        "already",
+        "yet",
+        "just",
+        "since"
+      ],
+      "correct_answer": 1,
+      "explanation": "Em perguntas sobre ações esperadas até o momento, usamos 'yet' no final da oração.",
+      "distractor_analysis": {
+        "already": "Geralmente usado em afirmativas ou perguntas demonstrando surpresa extrema.",
+        "just": "Usado entre o auxiliar e o verbo principal para indicar passado recentíssimo.",
+        "since": "Usado para marcar ponto inicial de tempo ('since Monday')."
+      },
+      "time_limit": 20,
+      "points": 1000
+    },
+    {
+      "id": 2,
+      "type": "multiple_choice",
+      "question": "Which sentence is INCORRECT?",
+      "options": [
+        "I have just arrived at the airport.",
+        "The flight took off ten minutes ago.",
+        "I have lost my passport yesterday.",
+        "She has already printed her boarding pass."
+      ],
+      "correct_answer": 2,
+      "explanation": "Quando especificamos o tempo no passado ('yesterday'), DEVEMOS usar o Simple Past ('I lost'), nunca o Present Perfect!",
+      "distractor_analysis": {
+        "A": "Correto, 'just' com Present Perfect para ação recente.",
+        "B": "Correto, 'ago' pede Simple Past.",
+        "D": "Correto, 'already' em afirmativa."
+      },
+      "time_limit": 25,
+      "points": 1200
+    },
+    {
+      "id": 3,
+      "type": "true_false",
+      "question": "True or False: 'Carry-on luggage' means the bags you take with you inside the airplane cabin.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correct_answer": 0,
+      "explanation": "True! 'Carry-on' é a mala de bordo/bagagem de mão levada na cabine.",
+      "distractor_analysis": {},
+      "time_limit": 15,
+      "points": 800
+    },
+    {
+      "id": 4,
+      "type": "multiple_choice",
+      "question": "Be careful at the airport door! 'PULL' means:",
+      "options": [
+        "Empurrar",
+        "Puxar",
+        "Pular",
+        "Apoiar"
+      ],
+      "correct_answer": 1,
+      "explanation": "Pegadinha clássica de falso cognato: 'PULL' é puxar. 'PUSH' é empurrar!",
+      "distractor_analysis": {
+        "Empurrar": "Erro clássico de confusão fonética com Push.",
+        "Pular": "Jump."
+      },
+      "time_limit": 15,
+      "points": 1000
+    },
+    {
+      "id": 5,
+      "type": "multiple_choice",
+      "question": "Complete: 'Don't worry, the plane hasn't landed ________.'",
+      "options": [
+        "yet",
+        "already",
+        "still",
+        "ever"
+      ],
+      "correct_answer": 0,
+      "explanation": "Em frases negativas no Present Perfect, usamos 'yet' no final da oração para dizer 'ainda não'.",
+      "distractor_analysis": {},
+      "time_limit": 20,
+      "points": 1000
+    }
+  ]
+}

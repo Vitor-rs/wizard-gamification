@@ -1,0 +1,251 @@
+@use "@/common/styles/colors" as *
+
+.host-theme .scoreboard h1,
+.host-theme .text-question-indicator h2
+  color: white
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35)
+
+.ingame-sound-control
+  position: fixed
+  bottom: 1rem
+  left: 1rem
+  z-index: 40
+  display: flex
+  gap: 1rem
+  align-items: center
+
+.ingame-question
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: flex-start
+  min-height: 100vh
+  padding: 2rem
+  box-sizing: border-box
+  position: relative
+
+.question-content-container
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: flex-start
+  width: 100%
+  max-width: 1400px
+  margin: 0 auto
+
+.ingame-question .answer-list
+  display: grid
+  grid-template-columns: repeat(2, 1fr)
+  grid-gap: 1rem
+  margin-top: 1.5rem
+  opacity: 0
+  transform: translateY(40px)
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+
+  &.answers-ready
+    opacity: 1
+    transform: translateY(0)
+    animation: answersSlideIn 0.6s ease-out 0.2s both
+
+.answer-progress-panel
+  position: fixed
+  top: 50%
+  right: 2.5rem
+  transform: translateY(-50%)
+  z-index: 40
+
+  .answer-progress-counter
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    gap: 0.2rem
+    width: 5.5rem
+    height: 5.5rem
+    border-radius: 50%
+    background: white
+    color: $text
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.12), 0 10px 24px rgba(0, 0, 0, 0.2)
+
+    .answer-progress-number
+      font-size: 1.9rem
+      font-weight: 900
+      font-variant-numeric: tabular-nums
+      line-height: 1
+
+    .answer-progress-label
+      font-size: 0.6rem
+      font-weight: 700
+      text-transform: uppercase
+      letter-spacing: 0.03em
+      opacity: 0.7
+
+.top-area
+  position: absolute
+  top: 2rem
+  right: 2rem
+  z-index: 100
+
+.question-wrapper
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+
+  &.hidden
+    opacity: 0
+    transform: translateY(20px) scale(0.98)
+
+  &.question-appear,
+  &.answers-ready
+    opacity: 1
+    transform: translateY(0) scale(1)
+
+  &.question-appear
+    animation: questionReveal 0.6s ease-out
+
+.text-question-indicator
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  margin-top: 3rem
+  opacity: 0
+  transform: translateY(40px)
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+
+  &.answers-ready
+    opacity: 1
+    transform: translateY(0)
+    animation: answersSlideIn 0.6s ease-out 0.2s both
+
+  h2
+    color: $text
+    margin: 0 0 2rem 0
+    text-align: center
+    font-size: 1.5rem
+    font-weight: 600
+
+  .text-input-animation
+    .typing-dots
+      display: flex
+      align-items: center
+      gap: 0.75rem
+
+      span
+        width: 12px
+        height: 12px
+        border-radius: 50%
+        background-color: $primary
+        animation: typing 1.6s infinite ease-in-out
+
+        &:nth-child(1)
+          animation-delay: -0.32s
+
+        &:nth-child(2)
+          animation-delay: -0.16s
+
+        &:nth-child(3)
+          animation-delay: 0s
+
+.text-question-indicator
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  margin-top: 3rem
+  opacity: 0
+  transform: translateY(40px)
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+
+  &.answers-ready
+    opacity: 1
+    transform: translateY(0)
+    animation: answersSlideIn 0.6s ease-out 0.2s both
+
+
+@keyframes pulse
+  0%, 100%
+    transform: scale(1)
+  50%
+    transform: scale(1.05)
+
+@keyframes questionReveal
+  0%
+    opacity: 0
+    transform: translateY(20px) scale(0.98)
+  100%
+    opacity: 1
+    transform: translateY(0) scale(1)
+
+@keyframes answersSlideIn
+  0%
+    opacity: 0
+    transform: translateY(30px) scale(0.95)
+  60%
+    transform: translateY(-3px) scale(1.01)
+  100%
+    opacity: 1
+    transform: translateY(0) scale(1)
+
+
+@keyframes countdownSpin
+  0%
+    transform: rotate(0deg)
+    filter: hue-rotate(0deg) brightness(1)
+  25%
+    filter: hue-rotate(90deg) brightness(1.2)
+  50%
+    transform: rotate(180deg)
+    filter: hue-rotate(180deg) brightness(1.4)
+  75%
+    filter: hue-rotate(270deg) brightness(1.2)
+  100%
+    transform: rotate(360deg)
+    filter: hue-rotate(360deg) brightness(1)
+
+@keyframes typing
+  0%, 80%, 100%
+    transform: scale(0.4)
+    opacity: 0.4
+  40%
+    transform: scale(1)
+
+.slider-host-preview
+  display: flex
+  justify-content: center
+  margin-top: 2rem
+
+  .slider-range-bar
+    display: flex
+    align-items: center
+    gap: 2rem
+    width: 80%
+    max-width: 700px
+
+    .range-label
+      font-size: 1.4rem
+      font-weight: 700
+      color: $gray
+      min-width: 60px
+      text-align: center
+
+    .range-track
+      flex: 1
+      height: 14px
+      background: $border
+      border-radius: 7px
+      position: relative
+      overflow: hidden
+
+      .range-fill
+        position: absolute
+        height: 100%
+        width: 100%
+        background: linear-gradient(90deg, rgba(231, 0, 34, 0.3), rgba(231, 0, 34, 0.6))
+        border-radius: 8px
+        animation: sliderPulse 2s ease-in-out infinite
+
+@keyframes sliderPulse
+  0%, 100%
+    opacity: 0.4
+  50%
+    opacity: 1
+    opacity: 1

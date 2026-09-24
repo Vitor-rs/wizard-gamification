@@ -1,0 +1,45 @@
+<resources>
+
+	<dimen name="settings_icon_size">50dp</dimen>
+	<dimen name="settings_icon_top_margin">43dp</dimen>
+	<dimen name="settings_icon_end_margin">36dp</dimen>
+	<dimen name="settings_icon_left_align">86dp</dimen>
+
+	<dimen name="icon_margin_left">12dp</dimen>
+    <dimen name="icon_margin_top">25dp</dimen>
+    <dimen name="att_margin_left">25dp</dimen>
+    <dimen name="title_margin_top">40dp</dimen>
+    <dimen name="title_margin_left">15dp</dimen>
+    <dimen name="title_text_size">22sp</dimen>
+    <dimen name="txtSelect_margin_top">140dp</dimen>
+    <dimen name="txtSelect_text_size">18sp</dimen>
+	<dimen name="buttonStart_width">150dp</dimen>
+	<dimen name="buttonStart_margin_top">50dp</dimen>
+	<dimen name="buttonStart_text_size">18sp</dimen>
+    
+	<dimen name="buttonContainer_width">56dp</dimen>
+
+	<dimen name="img_answer_width">60dp</dimen>
+	<dimen name="img_answer_height">60dp</dimen>
+	<dimen name="answerText_size">20sp</dimen>
+
+	<dimen name="answer_text_margin_top">25dp</dimen>
+	<dimen name="txt_total_margin_top">20dp</dimen>
+	<dimen name="txt_total_margin_right">10dp</dimen>
+	<dimen name="txt_total_text_size">18sp</dimen>
+	<dimen name="button_finish_width">160dp</dimen>
+	<dimen name="button_finish_text_size">18sp</dimen>
+    <dimen name="answer_icon_size">40dp</dimen>
+
+    <dimen name="grid_view_buttons_size">45dp</dimen>
+    <dimen name="grid_view_buttons_margin">5dp</dimen>
+	<dimen name="grid_view_answers_icons_margin">8dp</dimen>
+    <dimen name="grid_view_icons_margin">20dp</dimen>
+    <dimen name="grid_view_answers_margin">5dp</dimen>
+    <dimen name="debug_code_frequencies_horizontal_margin">50dp</dimen>
+
+	<dimen name="overlay_text_size">25sp</dimen>
+
+    <integer name="question_tag_max_length">256</integer>
+	
+</resources>

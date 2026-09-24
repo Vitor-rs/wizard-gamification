@@ -1,0 +1,34 @@
+@use "@/common/styles/colors" as *
+
+.add-question
+  margin-top: 0.5rem
+  display: flex
+  width: clamp(8rem, 12vw, 12rem)
+  height: 6rem
+  background-color: $background
+  border: 2px dashed $border
+  border-radius: 1rem
+  overflow: hidden
+  cursor: pointer
+  transition: all 0.2s ease
+
+  &:hover
+    transform: translateY(-1px)
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06)
+    border-color: $primary
+
+    svg
+      color: $primary
+
+  svg
+    margin: auto
+    font-size: 2rem
+    color: $gray
+    user-select: none
+    transition: color 0.2s ease
+
+
+@media screen and (max-width: 915px)
+  .add-question
+    width: 100%
+    height: 5rem

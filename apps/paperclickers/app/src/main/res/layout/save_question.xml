@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    
+    
+    <com.paperclickers.CustomEditText
+        android:id="@+id/questionTag"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:gravity="top|clip_vertical"
+        android:inputType="text|textImeMultiLine|textAutoCorrect|textCapSentences"
+        android:scrollbars="vertical"
+        android:background="#DEDEDE"
+        android:padding="10dp"
+        android:maxLength="@integer/question_tag_max_length"
+        android:imeOptions="actionDone|flagNoExtractUi"/>
+</RelativeLayout>

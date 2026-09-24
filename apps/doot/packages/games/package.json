@@ -1,0 +1,31 @@
+{
+  "name": "@doot-games/games",
+  "version": "0.0.0",
+  "description": "First-party Doot game plugins (VoteBox, and more).",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./catalog": "./src/catalog.ts",
+    "./markdown": "./src/markdown.ts"
+  },
+  "scripts": {
+    "build": "vue-tsc -p tsconfig.json",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@doot-games/engine": "workspace:*",
+    "@doot-games/sdk": "workspace:*",
+    "@doot-games/themes": "workspace:*",
+    "@doot-games/ui": "workspace:*",
+    "obscenity": "^0.4.6",
+    "three": "0.184.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.184.1"
+  }
+}

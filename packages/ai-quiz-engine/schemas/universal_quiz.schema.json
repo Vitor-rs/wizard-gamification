@@ -1,0 +1,45 @@
+﻿{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UniversalQuiz",
+  "type": "object",
+  "required": ["title", "book", "unit", "level", "questions"],
+  "properties": {
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "book": { "type": "string", "example": "W4" },
+    "unit": { "type": "string", "example": "Unit 5" },
+    "level": { "type": "string", "enum": ["Kids", "Teens", "Adults"] },
+    "target_language": { "type": "string", "default": "en" },
+    "grammar_focus": { "type": "array", "items": { "type": "string" } },
+    "vocabulary_focus": { "type": "array", "items": { "type": "string" } },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "question", "time_limit"],
+        "properties": {
+          "id": { "type": "integer" },
+          "type": {
+            "type": "string",
+            "enum": ["multiple_choice", "true_false", "ordering", "open_answer", "team_battle"]
+          },
+          "question": { "type": "string" },
+          "options": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "correct_answer": {
+            "type": ["integer", "string", "boolean", "array"]
+          },
+          "explanation": { "type": "string" },
+          "distractor_analysis": {
+            "type": "object",
+            "description": "Explicação pedagógica dos erros comuns para falantes de português"
+          },
+          "time_limit": { "type": "integer", "default": 20 },
+          "points": { "type": "integer", "default": 1000 }
+        }
+      }
+    }
+  }
+}

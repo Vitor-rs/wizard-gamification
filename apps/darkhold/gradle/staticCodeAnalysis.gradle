@@ -1,0 +1,77 @@
+apply plugin: 'checkstyle'
+apply plugin: 'pmd'
+apply plugin: 'jacoco'
+
+checkstyle {
+    toolVersion = '12.3.0'
+    ignoreFailures = false
+    maxWarnings = 0
+    checkstyleMain {
+        configFile = file("config/checkstyle/checkstyle.xml")
+    }
+
+    checkstyleTest {
+        configFile = file("config/checkstyle/checkstyleTest.xml")
+    }
+}
+
+pmd {
+    toolVersion = '7.19.0'
+    ignoreFailures = true
+    ruleSetFiles = files("config/pmd/ruleset.xml")
+    ruleSets = []
+    incrementalAnalysis = true
+}
+
+jacoco {
+    toolVersion = "0.8.14"
+    reportsDirectory = file("build/reports/jacoco/")
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+    }
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = false
+        html.required = true
+        html.stylesheet resources.text.fromFile('config/checkstyle/xsl/checkstyle-simple.xsl')
+    }
+}
+
+tasks.withType(Pmd).configureEach {
+    reports {
+        xml.required = false
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.55
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "surajcm_darkhold"
+        property "sonar.organization", "surajcm"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.login", project.findProperty("sonarToken")
+        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+    }
+}
+
+test {
+    finalizedBy jacocoTestReport
+}
